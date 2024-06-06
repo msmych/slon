@@ -8,12 +8,12 @@ import javax.sql.DataSource
 
 open class TestContainersSetup {
 
-    fun dataSource(): DataSource = dataSource
-
     companion object {
 
         private val postgres = PostgreSQLContainer("postgres")
         private lateinit var dataSource: DataSource
+
+        fun dataSource(): DataSource = dataSource
 
         @BeforeAll
         @JvmStatic
