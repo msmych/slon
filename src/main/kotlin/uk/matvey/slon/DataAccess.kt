@@ -13,9 +13,9 @@ class DataAccess(
         withStatement(query, PreparedStatement::executeUpdate)
     }
 
-    fun <T> query(query: String, block: (ResultSet) -> T): T {
+    fun <T> query(query: String, read: (ResultSet) -> T): T {
         return withStatement(query) { statement ->
-            statement.executeQuery().use(block)
+            statement.executeQuery().use(read)
         }
     }
 

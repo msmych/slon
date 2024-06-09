@@ -7,6 +7,7 @@ import uk.matvey.slon.command.Command
 import uk.matvey.slon.command.Insert
 import uk.matvey.slon.exception.PgNotNullViolationException
 import uk.matvey.slon.exception.PgUniqueViolationException
+import uk.matvey.slon.query.RecordReader
 
 class Repo(val dataAccess: DataAccess) {
 
@@ -35,9 +36,29 @@ class Repo(val dataAccess: DataAccess) {
         }
     }
 
+    fun <T> query(query: String, params: List<QueryParam>, read: (RecordReader) -> T): List<T> {
+        return dataAccess.withStatement(query) { st ->
+            var index = 1
+            params.forEach { param ->
+                index = param.setValue(st, index)
+            }
+            st.executeQuery().use { rs ->
+                val list = mutableListOf<T>()
+                while (rs.next()) {
+                    list += read(RecordReader(rs))
+                }
+                list
+            }
+        }
+    }
+
+    fun <T> query(query: String, read: (RecordReader) -> T): List<T> {
+        return query(query, listOf(), read)
+    }
+
     fun execute(vararg commands: Command) {
         return execute(commands.toList())
     }
 
-    fun execute(insert: Insert.Builder) = execute(insert.build())
+    fun execute(builder: Insert.Builder) = execute(builder.build())
 }

@@ -16,6 +16,7 @@ import uk.matvey.slon.command.Insert.Builder.Companion.insert
 import uk.matvey.slon.command.Update.Builder.Companion.update
 import uk.matvey.slon.exception.PgNotNullViolationException
 import uk.matvey.slon.exception.PgUniqueViolationException
+import uk.matvey.slon.query.RecordReader
 import java.time.Instant
 import java.util.UUID
 import java.util.UUID.randomUUID
@@ -29,12 +30,38 @@ class RepoTest : TestContainersSetup() {
     private val details = """{"key": "value"}"""
     private val tags = listOf("tag1", "tag2")
 
+    private data class RepoTestRecord(
+        val id: UUID?,
+        val age: Int?,
+        val code: Long?,
+        val name: String?,
+        val createdAt: Instant?,
+        val details: String?,
+        val tags: List<String>?,
+    ) {
+
+        companion object {
+
+            fun from(reader: RecordReader): RepoTestRecord {
+                return RepoTestRecord(
+                    reader.nullableUuid("id"),
+                    reader.nullableInt("age"),
+                    reader.nullableLong("code"),
+                    reader.nullableString("name"),
+                    reader.nullableInstant("created_at"),
+                    reader.nullableString("details"),
+                    reader.nullableStringList("tags"),
+                )
+            }
+        }
+    }
+
     @Test
     fun `should insert records`() {
         // given
         val id = randomUUID()
 
-        // when
+        // when / then
         repo.execute(
             insert("repo_test")
                 .values(
@@ -48,18 +75,16 @@ class RepoTest : TestContainersSetup() {
                 )
         )
 
-        // then
-        da.query("SELECT * FROM repo_test WHERE id = '$id'") { rs ->
-            assertThat(rs.next()).isTrue()
-            assertThat(rs.getObject("id", UUID::class.java)).isEqualTo(id)
-            assertThat(rs.getLong("age")).isEqualTo(age.toLong())
-            assertThat(rs.getLong("code")).isEqualTo(code)
-            assertThat(rs.getString("name")).isEqualTo(name)
-            assertThat(rs.getTimestamp("created_at").toInstant()).isEqualTo(createdAt)
-            assertThat(rs.getString("details")).isEqualTo(details)
-            assertThat(rs.getArray("tags").array).isEqualTo(tags.toTypedArray())
-            assertThat(rs.next()).isFalse()
-        }
+        val result = repo.query("SELECT * FROM repo_test WHERE id = ?", listOf(uuid(id)), RepoTestRecord::from)
+
+        assertThat(result).hasSize(1)
+        assertThat(result[0].id).isEqualTo(id)
+        assertThat(result[0].age).isEqualTo(age.toLong())
+        assertThat(result[0].code).isEqualTo(code)
+        assertThat(result[0].name).isEqualTo(name)
+        assertThat(result[0].createdAt).isEqualTo(createdAt)
+        assertThat(result[0].details).isEqualTo(details)
+        assertThat(result[0].tags).isEqualTo(tags)
     }
 
     @Test
@@ -67,7 +92,7 @@ class RepoTest : TestContainersSetup() {
         // given
         val name = randomUUID().toString()
 
-        // when
+        // when / then
         repo.execute(
             insert("repo_test")
                 .columns("id", "name")
@@ -76,14 +101,10 @@ class RepoTest : TestContainersSetup() {
                 .values(uuid(randomUUID()), text(name))
         )
 
-        // then
-        da.query("SELECT * FROM repo_test WHERE name = '$name'") { rs ->
-            repeat(3) {
-                assertThat(rs.next()).isTrue()
-                assertThat(rs.getString("name")).isEqualTo(name)
-            }
-            assertThat(rs.next()).isFalse()
+        val result = repo.query("SELECT * FROM repo_test WHERE name = ?", listOf(text(name))) { r ->
+            assertThat(r.string("name")).isEqualTo(name)
         }
+        assertThat(result).hasSize(3)
     }
 
     @Test
@@ -101,7 +122,7 @@ class RepoTest : TestContainersSetup() {
             val id = randomUUID().takeUnless { k == "id" }
             val name = randomUUID().toString()
 
-            // when
+            // when / then
             repo.execute(
                 insert("repo_test")
                     .values(
@@ -115,18 +136,15 @@ class RepoTest : TestContainersSetup() {
                     )
             )
 
-            // then
-            val condition = if (k == "id") {
-                "name = '$name'"
+            val (condition, conditionParam) = if (k == "id") {
+                "name = ?" to text(name)
             } else {
-                "id = '$id'"
+                "id = ?" to uuid(id)
             }
-            da.query("SELECT * FROM repo_test WHERE $condition") { rs ->
-                assertThat(rs.next()).isTrue()
-                rs.getObject(k)
-                assertThat(rs.wasNull()).isTrue()
-                assertThat(rs.next()).isFalse()
+            val result = repo.query("SELECT * FROM repo_test WHERE $condition", listOf(conditionParam)) { r ->
+                assertThat(r.nullableRaw(k)).isNull()
             }
+            assertThat(result).hasSize(1)
         }
     }
 
@@ -148,19 +166,17 @@ class RepoTest : TestContainersSetup() {
                 )
         )
 
-        // when
+        // when / then
         repo.execute(
             update("repo_test")
                 .set("name", text(newName))
                 .where("id = ?", uuid(id))
         )
 
-        // then
-        da.query("SELECT * FROM repo_test WHERE id = '$id'") { rs ->
-            assertThat(rs.next()).isTrue()
-            assertThat(rs.getString("name")).isEqualTo(newName)
-            assertThat(rs.next()).isFalse()
+        val result = repo.query("SELECT * FROM repo_test WHERE id = ?", listOf(uuid(id))) { r ->
+            assertThat(r.string("name")).isEqualTo(newName)
         }
+        assertThat(result).hasSize(1)
     }
 
     @Test
@@ -181,13 +197,11 @@ class RepoTest : TestContainersSetup() {
                 )
         )
 
-        // when
+        // when / then
         repo.execute(delete("repo_test").where("id = ?", uuid(id)))
 
-        // then
-        da.query("SELECT * FROM repo_test WHERE id = '$id'") { rs ->
-            assertThat(rs.next()).isFalse()
-        }
+        val result = repo.query("SELECT * FROM repo_test WHERE id = ?", listOf(uuid(id))) {}
+        assertThat(result).isEmpty()
     }
 
     @Test
@@ -205,7 +219,7 @@ class RepoTest : TestContainersSetup() {
                 .values(uuid(id2), text(name))
         )
 
-        // when
+        // when / then
         repo.execute(
             insert("repo_test")
                 .values("id" to uuid(id3), "name" to text(name))
@@ -217,16 +231,16 @@ class RepoTest : TestContainersSetup() {
                 .where("id = ?", uuid(id2))
         )
 
-        // then
-        da.query("select * from repo_test where id in ('$id1', '$id2', '$id3') ORDER BY id") { rs ->
-            assertThat(rs.next()).isTrue()
-            assertThat(rs.getObject("id")).isEqualTo(id1)
-            assertThat(rs.getString("name")).isEqualTo(newName)
-            assertThat(rs.next()).isTrue()
-            assertThat(rs.getObject("id")).isEqualTo(id3)
-            assertThat(rs.getString("name")).isEqualTo(name)
-            assertThat(rs.next()).isFalse()
-        }
+        val result = repo.query(
+            "SELECT * FROM repo_test WHERE id IN (?, ?, ?) ORDER BY id",
+            listOf(uuid(id1), uuid(id2), uuid(id3)),
+            RepoTestRecord::from
+        )
+        assertThat(result).hasSize(2)
+        assertThat(result[0].id).isEqualTo(id1)
+        assertThat(result[0].name).isEqualTo(newName)
+        assertThat(result[1].id).isEqualTo(id3)
+        assertThat(result[1].name).isEqualTo(name)
     }
 
     @Test
@@ -247,12 +261,10 @@ class RepoTest : TestContainersSetup() {
                 )
         )
 
-        da.query("SELECT * FROM repo_test WHERE name = '$name'") { rs ->
-            assertThat(rs.next()).isTrue()
-            rs.getObject("id")
-            assertThat(rs.wasNull()).isFalse()
-            assertThat(rs.next()).isFalse()
+        val result = repo.query("SELECT * FROM repo_test WHERE name = ?", listOf(text(name))) { r ->
+            assertThat(r.uuid("id")).isNotNull()
         }
+        assertThat(result).hasSize(1)
     }
 
     @Test
