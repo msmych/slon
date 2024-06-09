@@ -191,6 +191,45 @@ class RepoTest : TestContainersSetup() {
     }
 
     @Test
+    fun `should execute multiple commands`() {
+        // given
+        val id1 = UUID.fromString("1ade41eb-7446-430f-9a2c-e45f7136dcf0")
+        val id2 = UUID.fromString("9aca29a3-1a96-4807-b6f0-1c90d08b81a9")
+        val id3 = UUID.fromString("d5ffb4cd-583b-4423-b25b-af8882aa057e")
+        val newName = randomUUID().toString()
+
+        repo.execute(
+            insert("repo_test")
+                .columns("id", "name")
+                .values(uuid(id1), text(name))
+                .values(uuid(id2), text(name))
+        )
+
+        // when
+        repo.execute(
+            insert("repo_test")
+                .values("id" to uuid(id3), "name" to text(name))
+                .build(),
+            update("repo_test")
+                .set("name", text(newName))
+                .where("id = ?", uuid(id1)),
+            delete("repo_test")
+                .where("id = ?", uuid(id2))
+        )
+
+        // then
+        da.query("select * from repo_test where id in ('$id1', '$id2', '$id3') ORDER BY id") { rs ->
+            assertThat(rs.next()).isTrue()
+            assertThat(rs.getObject("id")).isEqualTo(id1)
+            assertThat(rs.getString("name")).isEqualTo(newName)
+            assertThat(rs.next()).isTrue()
+            assertThat(rs.getObject("id")).isEqualTo(id3)
+            assertThat(rs.getString("name")).isEqualTo(name)
+            assertThat(rs.next()).isFalse()
+        }
+    }
+
+    @Test
     fun `should support raw params`() {
         // given
         val name = randomUUID().toString()
