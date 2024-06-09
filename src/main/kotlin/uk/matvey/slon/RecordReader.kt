@@ -1,11 +1,9 @@
-package uk.matvey.slon.query
+package uk.matvey.slon
 
 import java.sql.ResultSet
 import java.util.UUID
 
-class RecordReader(
-    private val resultSet: ResultSet,
-) {
+class RecordReader(private val resultSet: ResultSet) {
 
     fun nullableRaw(name: String) = resultSet.getObject(name)?.nullable()
 

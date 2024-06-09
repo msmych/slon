@@ -7,20 +7,20 @@ import uk.matvey.slon.command.Command
 import uk.matvey.slon.command.Insert
 import uk.matvey.slon.exception.PgNotNullViolationException
 import uk.matvey.slon.exception.PgUniqueViolationException
-import uk.matvey.slon.query.RecordReader
 
-class Repo(val dataAccess: DataAccess) {
+class Repo(private val dataAccess: DataAccess) {
 
     fun execute(commands: List<Command>) {
-        dataAccess.withConnection { conn ->
-            conn.autoCommit = false
+        dataAccess.withConnection { connection ->
+            connection.autoCommit = false
             commands.forEach { command ->
-                conn.prepareStatement(command.generateQuery()).use { statement ->
+                connection.prepareStatement(command.generateQuery()).use { statement ->
                     command.setValues(statement, 1)
                     try {
-                        statement.executeUpdate()
+                        val count = statement.executeUpdate()
+                        command.onResult(count)
                     } catch (e: Exception) {
-                        conn.rollback()
+                        connection.rollback()
                         throw when (e) {
                             is PSQLException -> when (e.sqlState) {
                                 NOT_NULL_VIOLATION.state -> PgNotNullViolationException(e)
@@ -32,20 +32,20 @@ class Repo(val dataAccess: DataAccess) {
                     }
                 }
             }
-            conn.commit()
+            connection.commit()
         }
     }
 
     fun <T> query(query: String, params: List<QueryParam>, read: (RecordReader) -> T): List<T> {
-        return dataAccess.withStatement(query) { st ->
+        return dataAccess.withStatement(query) { statement ->
             var index = 1
             params.forEach { param ->
-                index = param.setValue(st, index)
+                index = param.setValue(statement, index)
             }
-            st.executeQuery().use { rs ->
+            statement.executeQuery().use { resultSet ->
                 val list = mutableListOf<T>()
-                while (rs.next()) {
-                    list += read(RecordReader(rs))
+                while (resultSet.next()) {
+                    list += read(RecordReader(resultSet))
                 }
                 list
             }

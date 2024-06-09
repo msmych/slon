@@ -10,8 +10,8 @@ class Insert(
 
     override fun generateQuery(): String {
         val columns = columns.joinToString(prefix = "(", postfix = ")")
-        val values = values.joinToString {
-            it.joinToString(prefix = "(", postfix = ")", transform = QueryParam::stringValue)
+        val values = values.joinToString { vs ->
+            vs.joinToString(prefix = "(", postfix = ")", transform = QueryParam::stringValue)
         }
         return "INSERT INTO $table $columns VALUES $values"
     }
@@ -23,6 +23,7 @@ class Insert(
     class Builder(
         private val table: String,
     ) {
+
         private lateinit var columns: List<String>
         private val values = mutableListOf<List<QueryParam>>()
 
@@ -34,9 +35,9 @@ class Insert(
             this.values += values.toList()
         }
 
-        fun values(vararg values: Pair<String, QueryParam>) = apply {
-            this.columns = values.map { it.first }.toList()
-            this.values += values.map { it.second }.toList()
+        fun set(vararg values: Pair<String, QueryParam>) = apply {
+            this.columns = values.map { (k, _) -> k }.toList()
+            this.values += values.map { (_, v) -> v }.toList()
         }
 
         fun build() = Insert(table, columns, values)

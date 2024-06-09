@@ -13,10 +13,11 @@ import uk.matvey.slon.QueryParam.Companion.timestamp
 import uk.matvey.slon.QueryParam.Companion.uuid
 import uk.matvey.slon.command.Delete.Builder.Companion.delete
 import uk.matvey.slon.command.Insert.Builder.Companion.insert
+import uk.matvey.slon.command.Update.Builder.Companion.optimisticUpdate
 import uk.matvey.slon.command.Update.Builder.Companion.update
+import uk.matvey.slon.exception.OptimisticLockException
 import uk.matvey.slon.exception.PgNotNullViolationException
 import uk.matvey.slon.exception.PgUniqueViolationException
-import uk.matvey.slon.query.RecordReader
 import java.time.Instant
 import java.util.UUID
 import java.util.UUID.randomUUID
@@ -64,7 +65,7 @@ class RepoTest : TestContainersSetup() {
         // when / then
         repo.execute(
             insert("repo_test")
-                .values(
+                .set(
                     "id" to uuid(id),
                     "age" to int(age),
                     "code" to int(code),
@@ -125,7 +126,7 @@ class RepoTest : TestContainersSetup() {
             // when / then
             repo.execute(
                 insert("repo_test")
-                    .values(
+                    .set(
                         "id" to uuid(id),
                         "age" to int(age.takeUnless { k == "age" }),
                         "code" to int(code.takeUnless { k == "code" }),
@@ -155,7 +156,7 @@ class RepoTest : TestContainersSetup() {
         val newName = randomUUID().toString()
         repo.execute(
             insert("repo_test")
-                .values(
+                .set(
                     "id" to uuid(id),
                     "age" to int(age),
                     "code" to int(code),
@@ -186,7 +187,7 @@ class RepoTest : TestContainersSetup() {
 
         repo.execute(
             insert("repo_test")
-                .values(
+                .set(
                     "id" to uuid(id),
                     "age" to int(age),
                     "code" to int(code),
@@ -222,7 +223,7 @@ class RepoTest : TestContainersSetup() {
         // when / then
         repo.execute(
             insert("repo_test")
-                .values("id" to uuid(id3), "name" to text(name))
+                .set("id" to uuid(id3), "name" to text(name))
                 .build(),
             update("repo_test")
                 .set("name", text(newName))
@@ -250,7 +251,7 @@ class RepoTest : TestContainersSetup() {
 
         repo.execute(
             insert("repo_test")
-                .values(
+                .set(
                     "id" to raw("gen_random_uuid()"),
                     "age" to int(age),
                     "code" to int(code),
@@ -270,7 +271,7 @@ class RepoTest : TestContainersSetup() {
     @Test
     fun `should throw not null violation exception`() {
         // when / then
-        assertThatThrownBy { repo.execute(insert("repo_pk_test").values("id" to uuid(null))) }
+        assertThatThrownBy { repo.execute(insert("repo_pk_test").set("id" to uuid(null))) }
             .isInstanceOf(PgNotNullViolationException::class.java)
     }
 
@@ -278,11 +279,25 @@ class RepoTest : TestContainersSetup() {
     fun `should throw unique violation exception`() {
         // given
         val id = randomUUID()
-        repo.execute(insert("repo_pk_test").values("id" to uuid(id)))
+        repo.execute(insert("repo_pk_test").set("id" to uuid(id)))
 
         // when / then
-        assertThatThrownBy { repo.execute(insert("repo_pk_test").values("id" to uuid(id))) }
+        assertThatThrownBy { repo.execute(insert("repo_pk_test").set("id" to uuid(id))) }
             .isInstanceOf(PgUniqueViolationException::class.java)
+    }
+
+    @Test
+    fun `should throw optimistic lock exception`() {
+        // when / then
+        assertThatThrownBy {
+            repo.execute(
+                optimisticUpdate("repo_test")
+                    .set("name", text("New Name"))
+                    .where("id = ?", uuid(randomUUID()))
+            )
+        }
+            .isInstanceOf(OptimisticLockException::class.java)
+            .hasMessage("Update condition was not satisfied. Table: [repo_test], condition: [id = ?]")
     }
 
     companion object {

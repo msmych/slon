@@ -17,4 +17,7 @@ sealed interface Command {
         }
         return index
     }
+
+    fun onResult(count: Int) {
+    }
 }

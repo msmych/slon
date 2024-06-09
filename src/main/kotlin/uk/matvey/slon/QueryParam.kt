@@ -14,8 +14,8 @@ import java.sql.Types.NULL
 import java.time.Instant
 
 class QueryParam(
-    val type: Type,
-    val value: Any?,
+    private val type: Type,
+    private val value: Any?,
 ) {
 
     enum class Type {
@@ -50,8 +50,7 @@ class QueryParam(
                     statement.setObject(index, pgObj)
                 }
                 TEXT_ARRAY -> {
-                    val array =
-                        statement.connection.createArrayOf("text", (value as Collection<*>).toTypedArray())
+                    val array = statement.connection.createArrayOf("text", (value as Collection<*>).toTypedArray())
                     statement.setArray(index, array)
                 }
             }

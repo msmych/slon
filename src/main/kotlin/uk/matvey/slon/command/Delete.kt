@@ -18,7 +18,9 @@ class Delete(
 
     class Builder(private val table: String) {
 
-        fun where(condition: String, vararg params: QueryParam) = Delete(table, condition, params.toList())
+        fun where(condition: String, vararg params: QueryParam): Delete {
+            return Delete(table, condition, params.toList())
+        }
 
         companion object {
 

@@ -5,9 +5,7 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import javax.sql.DataSource
 
-class DataAccess(
-    private val dataSource: DataSource,
-) {
+class DataAccess(private val dataSource: DataSource) {
 
     fun execute(query: String) {
         withStatement(query, PreparedStatement::executeUpdate)
