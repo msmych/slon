@@ -83,6 +83,8 @@ publishing {
     }
 }
 
+val releaseVersion = project.findProperty("releaseVersion") ?: "SNAPSHOT"
+
 jreleaser {
     signing {
         setActive("ALWAYS")
@@ -94,12 +96,13 @@ jreleaser {
                 create("sonatype") {
                     setActive("ALWAYS")
                     namespace = "uk.matvey"
+                    deploymentId = "slon"
                     url = "https://central.sonatype.com/api/v1/publisher"
                     stagingRepository("build/staging-deploy")
                 }
             }
         }
         group = "uk.matvey"
-        version = "0.0.2-RC2"
+        version = releaseVersion
     }
 }

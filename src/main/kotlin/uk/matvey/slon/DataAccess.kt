@@ -1,27 +1,32 @@
 package uk.matvey.slon
 
+import uk.matvey.slon.command.Command
+import uk.matvey.slon.param.Param
+import uk.matvey.slon.query.Query
+import uk.matvey.slon.query.Select
 import java.sql.Connection
-import java.sql.PreparedStatement
-import java.sql.ResultSet
-import javax.sql.DataSource
+import java.sql.Connection.TRANSACTION_READ_COMMITTED
 
-class DataAccess(private val dataSource: DataSource) {
+class DataAccess(private val connection: Connection) {
+
+    init {
+        connection.transactionIsolation = TRANSACTION_READ_COMMITTED
+        connection.autoCommit = false
+    }
+
+    fun execute(command: Command) {
+        command.execute(connection)
+    }
+
+    fun <T> execute(query: Query<T>): T {
+        return query.execute(connection)
+    }
 
     fun execute(query: String) {
-        withStatement(query, PreparedStatement::executeUpdate)
+        connection.prepareStatement(query).executeUpdate()
     }
 
-    fun <T> query(query: String, read: (ResultSet) -> T): T {
-        return withStatement(query) { statement ->
-            statement.executeQuery().use(read)
-        }
-    }
-
-    fun <T> withStatement(query: String, block: (PreparedStatement) -> T): T {
-        return withConnection { connection -> connection.prepareStatement(query).use(block) }
-    }
-
-    fun <T> withConnection(block: (Connection) -> T): T {
-        return dataSource.connection.use(block)
+    fun <T> query(query: String, params: List<Param>, read: (RecordReader) -> T): List<T> {
+        return execute(Select(query, params, read))
     }
 }

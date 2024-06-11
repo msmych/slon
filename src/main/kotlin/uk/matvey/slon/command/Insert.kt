@@ -1,50 +1,27 @@
 package uk.matvey.slon.command
 
-import uk.matvey.slon.QueryParam
+import uk.matvey.slon.param.Param
+import java.sql.Connection
 
 class Insert(
     private val table: String,
     private val columns: List<String>,
-    private val values: List<List<QueryParam>>,
+    private val values: List<List<Param>>,
 ) : Command {
 
-    override fun generateQuery(): String {
+    override fun execute(connection: Connection) {
         val columns = columns.joinToString(prefix = "(", postfix = ")")
         val values = values.joinToString { vs ->
-            vs.joinToString(prefix = "(", postfix = ")", transform = QueryParam::stringValue)
+            vs.joinToString(prefix = "(", postfix = ")", transform = Param::stringValue)
         }
-        return "INSERT INTO $table $columns VALUES $values"
-    }
-
-    override fun collectParams(): List<QueryParam> {
-        return values.flatten()
-    }
-
-    class Builder(
-        private val table: String,
-    ) {
-
-        private lateinit var columns: List<String>
-        private val values = mutableListOf<List<QueryParam>>()
-
-        fun columns(vararg columns: String) = apply {
-            this.columns = columns.toList()
-        }
-
-        fun values(vararg values: QueryParam) = apply {
-            this.values += values.toList()
-        }
-
-        fun set(vararg values: Pair<String, QueryParam>) = apply {
-            this.columns = values.map { (k, _) -> k }.toList()
-            this.values += values.map { (_, v) -> v }.toList()
-        }
-
-        fun build() = Insert(table, columns, values)
-
-        companion object {
-
-            fun insert(table: String) = Builder(table)
+        val query = "insert into $table $columns values $values"
+        connection.prepareStatement(query).use { statement ->
+            val params = this.values.flatten()
+            var index = 1
+            params.forEach { param ->
+                index = param.setValue(statement, index)
+            }
+            statement.executeUpdate()
         }
     }
 }
