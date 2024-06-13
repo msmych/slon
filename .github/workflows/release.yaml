@@ -29,8 +29,7 @@ jobs:
 
       - name: Release
         run: |
-          echo ${{ github.event.inputs.releaseVersion }}
           ./gradlew jreleaserConfig -PreleaseVersion="${{ github.event.inputs.releaseVersion }}"
           ./gradlew clean
-          ./gradlew publish ${{ github.event.inputs.releaseVersion }}
+          ./gradlew publish -PreleaseVersion="${{ github.event.inputs.releaseVersion }}"
           ./gradlew jreleaserFullRelease -PreleaseVersion="${{ github.event.inputs.releaseVersion }}" 
