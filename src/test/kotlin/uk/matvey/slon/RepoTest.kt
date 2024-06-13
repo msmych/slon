@@ -20,6 +20,7 @@ import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.param.UuidParam.Companion.uuid
 import java.time.Instant
+import java.time.temporal.ChronoUnit.MILLIS
 import java.util.UUID
 import java.util.UUID.randomUUID
 
@@ -28,7 +29,7 @@ class RepoTest : TestContainersSetup() {
     private val name = "name"
     private val age = 27
     private val code = 9_999_999_999_999
-    private val createdAt = Instant.now()
+    private val createdAt = Instant.now().truncatedTo(MILLIS)
     private val details = """{"key": "value"}"""
     private val tags = listOf("tag1", "tag2")
 
