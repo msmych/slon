@@ -29,7 +29,7 @@ jobs:
 
       - name: Release
         run: |
-          ./gradlew jreleaserConfig
+          ./gradlew jreleaserConfig -PreleaseVersion="${{ github.event.inputs.releaseVersion }}"
           ./gradlew clean
           ./gradlew publish
-          ./gradlew jreleaserFullRelease -PreleaseVersion="${{ github.event.inputs.releaseVersion }}"
+          ./gradlew jreleaserFullRelease -PreleaseVersion="${{ github.event.inputs.releaseVersion }}" 
