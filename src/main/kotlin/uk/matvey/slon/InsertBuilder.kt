@@ -26,8 +26,13 @@ class InsertBuilder(
 
     fun build() = Insert(table, columns, values)
 
-    fun <T> returning(returning: List<String>, read: (RecordReader) -> T) =
-        InsertReturning(table, columns.toList(), values, returning, read)
+    fun <T> returning(returning: List<String>, read: (RecordReader) -> T): InsertReturning<T> {
+        return InsertReturning(table, columns.toList(), values, returning, read)
+    }
+
+    fun <T> returningStar(read: (RecordReader) -> T): InsertReturning<T> {
+        return returning(listOf("*"), read)
+    }
 
     companion object {
 

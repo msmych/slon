@@ -13,5 +13,9 @@ class RawParam(private val value: String) : Param() {
     companion object {
 
         fun raw(value: String) = RawParam(value)
+
+        fun genRandomUuid() = raw("gen_random_uuid()")
+
+        fun now() = raw("now()")
     }
 }

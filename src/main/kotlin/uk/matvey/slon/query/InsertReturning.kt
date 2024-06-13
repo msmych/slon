@@ -1,7 +1,7 @@
 package uk.matvey.slon.query
 
-import uk.matvey.slon.param.Param
 import uk.matvey.slon.RecordReader
+import uk.matvey.slon.param.Param
 import java.sql.Connection
 
 class InsertReturning<T>(
@@ -17,7 +17,7 @@ class InsertReturning<T>(
         val values = values.joinToString { vs ->
             vs.joinToString(prefix = "(", postfix = ")", transform = Param::stringValue)
         }
-        val returning = returning.joinToString(prefix = "(", postfix = ")")
+        val returning = returning.joinToString()
         val query = "insert into $table $columns values $values returning $returning"
         return connection.prepareStatement(query).use { statement ->
             val params = this.values.flatten()

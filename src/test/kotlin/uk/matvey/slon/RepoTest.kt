@@ -15,7 +15,7 @@ import uk.matvey.slon.exception.PgUniqueViolationException
 import uk.matvey.slon.param.ArrayParam.Companion.textArray
 import uk.matvey.slon.param.IntParam.Companion.int
 import uk.matvey.slon.param.JsonbParam.Companion.jsonb
-import uk.matvey.slon.param.RawParam.Companion.raw
+import uk.matvey.slon.param.RawParam.Companion.genRandomUuid
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.param.UuidParam.Companion.uuid
@@ -272,7 +272,7 @@ class RepoTest : TestContainersSetup() {
         repo.execute(
             insert("repo_test")
                 .set(
-                    "id" to raw("gen_random_uuid()"),
+                    "id" to genRandomUuid(),
                     "age" to int(age),
                     "code" to int(code),
                     "name" to text(name),
@@ -296,7 +296,7 @@ class RepoTest : TestContainersSetup() {
 
         // when / then
         repo.access { da ->
-            da.execute(insert("repo_test").set("id" to raw("gen_random_uuid()"), "name" to text(name)).build())
+            da.execute(insert("repo_test").set("id" to genRandomUuid(), "name" to text(name)).build())
             val record = da.query("select * from repo_test where name = ?", listOf(text(name)), RepoTestRecord::from)
             assertThat(record).hasSize(1)
             assertThat(record[0].name).isEqualTo(name)
@@ -308,8 +308,21 @@ class RepoTest : TestContainersSetup() {
         // when
         val result = repo.query(
             insert("repo_test")
-                .set("id" to raw("gen_random_uuid()"))
+                .set("id" to genRandomUuid())
                 .returning(listOf("id")) { r -> r.uuid("id") }
+        )
+
+        // then
+        assertThat(result).hasSize(1)
+    }
+
+    @Test
+    fun `should insert returning star`() {
+        // when
+        val result = repo.query(
+            insert("repo_test")
+                .set("id" to genRandomUuid())
+                .returningStar(RepoTestRecord::from)
         )
 
         // then
