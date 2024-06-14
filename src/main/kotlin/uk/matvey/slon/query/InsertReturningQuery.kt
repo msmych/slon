@@ -4,7 +4,7 @@ import uk.matvey.slon.RecordReader
 import uk.matvey.slon.param.Param
 import java.sql.Connection
 
-class InsertReturning<T>(
+class InsertReturningQuery<T>(
     private val table: String,
     private val columns: List<String>,
     private val values: List<List<Param>>,
@@ -19,18 +19,7 @@ class InsertReturning<T>(
         }
         val returning = returning.joinToString()
         val query = "insert into $table $columns values $values returning $returning"
-        return connection.prepareStatement(query).use { statement ->
-            val params = this.values.flatten()
-            var index = 1
-            params.forEach { param ->
-                index = param.setValue(statement, index)
-            }
-            val resultSet = statement.executeQuery()
-            val list = mutableListOf<T>()
-            while (resultSet.next()) {
-                list += read(RecordReader(resultSet))
-            }
-            list
-        }
+        val params = this.values.flatten()
+        return RawQuery(query, params, read).execute(connection)
     }
 }

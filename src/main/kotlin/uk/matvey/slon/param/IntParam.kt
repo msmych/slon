@@ -15,6 +15,7 @@ class IntParam(private val value: Long?) : Param() {
     }
 
     companion object {
+
         fun int(value: Long?) = IntParam(value)
 
         fun int(value: Int?) = int(value?.toLong())

@@ -5,10 +5,7 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import uk.matvey.slon.InsertBuilder.Companion.insert
-import uk.matvey.slon.command.Delete.Builder.Companion.delete
-import uk.matvey.slon.command.Delete.Builder.Companion.optimisticDelete
-import uk.matvey.slon.command.Update.Builder.Companion.optimisticUpdate
-import uk.matvey.slon.command.Update.Builder.Companion.update
+import uk.matvey.slon.InsertBuilder.Companion.insertInto
 import uk.matvey.slon.exception.OptimisticLockException
 import uk.matvey.slon.exception.PgNotNullViolationException
 import uk.matvey.slon.exception.PgUniqueViolationException
@@ -19,6 +16,11 @@ import uk.matvey.slon.param.RawParam.Companion.genRandomUuid
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.param.UuidParam.Companion.uuid
+import uk.matvey.slon.query.RawQuery.Companion.rawQuery
+import uk.matvey.slon.query.update.DeleteQuery.Builder.Companion.deleteFrom
+import uk.matvey.slon.query.update.OptimisticUpdateQuery.Companion.optimistic
+import uk.matvey.slon.query.update.RawUpdateQuery.Companion.rawUpdate
+import uk.matvey.slon.query.update.UpdateQuery.Builder.Companion.update
 import java.time.Instant
 import java.time.temporal.ChronoUnit.MILLIS
 import java.util.UUID
@@ -65,9 +67,10 @@ class RepoTest : TestContainersSetup() {
         val id = randomUUID()
 
         // when / then
-        repo.execute(
-            insert("repo_test")
-                .set(
+        repo.access { a ->
+            a.execute(
+                insert(
+                    "repo_test",
                     "id" to uuid(id),
                     "age" to int(age),
                     "code" to int(code),
@@ -76,14 +79,18 @@ class RepoTest : TestContainersSetup() {
                     "details" to jsonb(details),
                     "tags" to textArray(tags),
                 )
-                .build()
-        )
+            )
+        }
 
-        val result = repo.query(
-            "select * from repo_test where id = ?",
-            listOf(uuid(id)),
-            RepoTestRecord::from
-        )
+        val result = repo.access { a ->
+            a.execute(
+                rawQuery(
+                    "select * from repo_test where id = ?",
+                    listOf(uuid(id)),
+                    RepoTestRecord::from
+                )
+            )
+        }
 
         assertThat(result).hasSize(1)
         assertThat(result[0].id).isEqualTo(id)
@@ -101,20 +108,26 @@ class RepoTest : TestContainersSetup() {
         val name = randomUUID().toString()
 
         // when / then
-        repo.execute(
-            insert("repo_test")
-                .columns("id", "name")
-                .values(uuid(randomUUID()), text(name))
-                .values(uuid(randomUUID()), text(name))
-                .values(uuid(randomUUID()), text(name))
-                .build()
-        )
+        repo.access { a ->
+            a.execute(
+                insertInto("repo_test")
+                    .columns("id", "name")
+                    .values(uuid(randomUUID()), text(name))
+                    .values(uuid(randomUUID()), text(name))
+                    .values(uuid(randomUUID()), text(name))
+                    .build()
+            )
+        }
 
-        val result = repo.query(
-            "select * from repo_test where name = ?",
-            listOf(text(name))
-        ) { r ->
-            assertThat(r.string("name")).isEqualTo(name)
+        val result = repo.access { a ->
+            a.execute(
+                rawQuery(
+                    "select * from repo_test where name = ?",
+                    listOf(text(name))
+                ) { r ->
+                    assertThat(r.string("name")).isEqualTo(name)
+                }
+            )
         }
         assertThat(result).hasSize(3)
     }
@@ -135,9 +148,10 @@ class RepoTest : TestContainersSetup() {
             val name = randomUUID().toString()
 
             // when / then
-            repo.execute(
-                insert("repo_test")
-                    .set(
+            repo.access { a ->
+                a.execute(
+                    insert(
+                        "repo_test",
                         "id" to uuid(id),
                         "age" to int(age.takeUnless { k == "age" }),
                         "code" to int(code.takeUnless { k == "code" }),
@@ -146,18 +160,18 @@ class RepoTest : TestContainersSetup() {
                         "details" to jsonb(details.takeUnless { k == "details" }),
                         "tags" to textArray(tags.takeUnless { k == "tags" }),
                     )
-                    .build()
-            )
+                )
+            }
 
             val (condition, conditionParam) = if (k == "id") {
                 "name = ?" to text(name)
             } else {
                 "id = ?" to uuid(id)
             }
-            val result = repo.query(
-                "select * from repo_test where $condition", listOf(conditionParam)
-            ) { r ->
-                assertThat(r.nullableRaw(k)).isNull()
+            val result = repo.access { a ->
+                a.execute(rawQuery("select * from repo_test where $condition", listOf(conditionParam)) { r ->
+                    assertThat(r.nullableRaw(k)).isNull()
+                })
             }
             assertThat(result).hasSize(1)
         }
@@ -168,9 +182,10 @@ class RepoTest : TestContainersSetup() {
         // given
         val id = randomUUID()
         val newName = randomUUID().toString()
-        repo.execute(
-            insert("repo_test")
-                .set(
+        repo.access { a ->
+            a.execute(
+                insert(
+                    "repo_test",
                     "id" to uuid(id),
                     "age" to int(age),
                     "code" to int(code),
@@ -179,21 +194,25 @@ class RepoTest : TestContainersSetup() {
                     "details" to jsonb(details),
                     "tags" to textArray(tags),
                 )
-                .build()
-        )
+            )
+        }
 
         // when / then
-        repo.execute(
-            update("repo_test")
-                .set("name", text(newName))
-                .where("id = ?", uuid(id))
-        )
+        repo.access { a ->
+            a.execute(
+                update("repo_test")
+                    .set("name", text(newName))
+                    .where("id = ?", uuid(id))
+            )
+        }
 
-        val result = repo.query(
-            "select * from repo_test where id = ?",
-            listOf(uuid(id))
-        ) { r ->
-            assertThat(r.string("name")).isEqualTo(newName)
+        val result = repo.access { a ->
+            a.execute(rawQuery(
+                "select * from repo_test where id = ?",
+                listOf(uuid(id))
+            ) { r ->
+                assertThat(r.string("name")).isEqualTo(newName)
+            })
         }
         assertThat(result).hasSize(1)
     }
@@ -203,9 +222,10 @@ class RepoTest : TestContainersSetup() {
         // given
         val id = randomUUID()
 
-        repo.execute(
-            insert("repo_test")
-                .set(
+        repo.access { a ->
+            a.execute(
+                insert(
+                    "repo_test",
                     "id" to uuid(id),
                     "age" to int(age),
                     "code" to int(code),
@@ -214,13 +234,14 @@ class RepoTest : TestContainersSetup() {
                     "details" to jsonb(details),
                     "tags" to textArray(tags),
                 )
-                .build()
-        )
+            )
+        }
 
         // when / then
-        repo.execute(delete("repo_test").where("id = ?", uuid(id)))
+        repo.access { a -> a.execute(deleteFrom("repo_test").where("id = ?", uuid(id))) }
 
-        val result = repo.query("select * from repo_test where id = ?", listOf(uuid(id))) {}
+        val result =
+            repo.access { a -> a.execute(rawQuery("select * from repo_test where id = ?", listOf(uuid(id))) {}) }
         assertThat(result).isEmpty()
     }
 
@@ -232,31 +253,45 @@ class RepoTest : TestContainersSetup() {
         val id3 = UUID.fromString("d5ffb4cd-583b-4423-b25b-af8882aa057e")
         val newName = randomUUID().toString()
 
-        repo.execute(
-            insert("repo_test")
-                .columns("id", "name")
-                .values(uuid(id1), text(name))
-                .values(uuid(id2), text(name))
-                .build()
-        )
+        repo.access { a ->
+            a.execute(
+                insertInto("repo_test")
+                    .columns("id", "name")
+                    .values(uuid(id1), text(name))
+                    .values(uuid(id2), text(name))
+                    .build()
+            )
+        }
 
         // when / then
-        repo.execute(
-            insert("repo_test")
-                .set("id" to uuid(id3), "name" to text(name))
-                .build(),
-            update("repo_test")
-                .set("name", text(newName))
-                .where("id = ?", uuid(id1)),
-            delete("repo_test")
-                .where("id = ?", uuid(id2))
-        )
+        repo.access { a ->
+            a.execute(
+                insert(
+                    "repo_test",
+                    "id" to uuid(id3),
+                    "name" to text(name)
+                )
+            )
+            a.execute(
+                update("repo_test")
+                    .set("name", text(newName))
+                    .where("id = ?", uuid(id1)),
+            )
+            a.execute(
+                deleteFrom("repo_test")
+                    .where("id = ?", uuid(id2))
+            )
+        }
 
-        val result = repo.query(
-            "select * from repo_test where id in (?, ?, ?) order by id",
-            listOf(uuid(id1), uuid(id2), uuid(id3)),
-            RepoTestRecord::from
-        )
+        val result = repo.access { a ->
+            a.execute(
+                rawQuery(
+                    "select * from repo_test where id in (?, ?, ?) order by id",
+                    listOf(uuid(id1), uuid(id2), uuid(id3)),
+                    RepoTestRecord::from
+                )
+            )
+        }
         assertThat(result).hasSize(2)
         assertThat(result[0].id).isEqualTo(id1)
         assertThat(result[0].name).isEqualTo(newName)
@@ -269,9 +304,10 @@ class RepoTest : TestContainersSetup() {
         // given
         val name = randomUUID().toString()
 
-        repo.execute(
-            insert("repo_test")
-                .set(
+        repo.access { a ->
+            a.execute(
+                insert(
+                    "repo_test",
                     "id" to genRandomUuid(),
                     "age" to int(age),
                     "code" to int(code),
@@ -280,11 +316,13 @@ class RepoTest : TestContainersSetup() {
                     "details" to jsonb(details),
                     "tags" to textArray(tags),
                 )
-                .build()
-        )
+            )
+        }
 
-        val result = repo.query("select * from repo_test where name = ?", listOf(text(name))) { r ->
-            assertThat(r.uuid("id")).isNotNull()
+        val result = repo.access { a ->
+            a.execute(rawQuery("select * from repo_test where name = ?", listOf(text(name))) { r ->
+                assertThat(r.uuid("id")).isNotNull()
+            })
         }
         assertThat(result).hasSize(1)
     }
@@ -295,9 +333,10 @@ class RepoTest : TestContainersSetup() {
         val name = randomUUID().toString()
 
         // when / then
-        repo.access { da ->
-            da.execute(insert("repo_test").set("id" to genRandomUuid(), "name" to text(name)).build())
-            val record = da.query("select * from repo_test where name = ?", listOf(text(name)), RepoTestRecord::from)
+        repo.access { a ->
+            a.execute(insert("repo_test", "id" to genRandomUuid(), "name" to text(name)))
+            val record =
+                a.execute(rawQuery("select * from repo_test where name = ?", listOf(text(name)), RepoTestRecord::from))
             assertThat(record).hasSize(1)
             assertThat(record[0].name).isEqualTo(name)
         }
@@ -306,11 +345,12 @@ class RepoTest : TestContainersSetup() {
     @Test
     fun `should insert returning`() {
         // when
-        val result = repo.query(
-            insert("repo_test")
+        val result = repo.access { a ->
+            a.execute(insertInto("repo_test")
                 .set("id" to genRandomUuid())
                 .returning(listOf("id")) { r -> r.uuid("id") }
-        )
+            )
+        }
 
         // then
         assertThat(result).hasSize(1)
@@ -319,11 +359,13 @@ class RepoTest : TestContainersSetup() {
     @Test
     fun `should insert returning star`() {
         // when
-        val result = repo.query(
-            insert("repo_test")
-                .set("id" to genRandomUuid())
-                .returningStar(RepoTestRecord::from)
-        )
+        val result = repo.access { a ->
+            a.execute(
+                insertInto("repo_test")
+                    .set("id" to genRandomUuid())
+                    .returning(RepoTestRecord::from)
+            )
+        }
 
         // then
         assertThat(result).hasSize(1)
@@ -332,7 +374,13 @@ class RepoTest : TestContainersSetup() {
     @Test
     fun `should throw not null violation exception`() {
         // when / then
-        assertThatThrownBy { repo.execute(insert("repo_pk_test").set("id" to uuid(null)).build()) }
+        assertThatThrownBy {
+            repo.access { a ->
+                a.execute(
+                    insert("repo_pk_test", "id" to uuid(null))
+                )
+            }
+        }
             .isInstanceOf(PgNotNullViolationException::class.java)
     }
 
@@ -340,10 +388,10 @@ class RepoTest : TestContainersSetup() {
     fun `should throw unique violation exception`() {
         // given
         val id = randomUUID()
-        repo.execute(insert("repo_pk_test").set("id" to uuid(id)).build())
+        repo.access { a -> a.execute(insert("repo_pk_test", "id" to uuid(id))) }
 
         // when / then
-        assertThatThrownBy { repo.execute(insert("repo_pk_test").set("id" to uuid(id)).build()) }
+        assertThatThrownBy { repo.access { a -> a.execute(insert("repo_pk_test", "id" to uuid(id))) } }
             .isInstanceOf(PgUniqueViolationException::class.java)
     }
 
@@ -351,24 +399,32 @@ class RepoTest : TestContainersSetup() {
     fun `should throw optimistic lock exception`() {
         // when / then
         assertThatThrownBy {
-            repo.execute(
-                optimisticUpdate("repo_test")
-                    .set("name", text("New Name"))
-                    .where("id = ?", uuid(randomUUID()))
-            )
+            repo.access { a ->
+                a.execute(
+                    optimistic(
+                        update("repo_test")
+                            .set("name", text("New Name"))
+                            .where("id = ?", uuid(randomUUID()))
+                    )
+                )
+            }
         }
             .isInstanceOf(OptimisticLockException::class.java)
-            .hasMessage("Condition was not satisfied. Table: [repo_test], condition: [id = ?]")
+            .hasMessage("Condition was not satisfied")
 
         // when / then
         assertThatThrownBy {
-            repo.execute(
-                optimisticDelete("repo_test")
-                    .where("id = ?", uuid(randomUUID()))
-            )
+            repo.access { a ->
+                a.execute(
+                    optimistic(
+                        deleteFrom("repo_test")
+                            .where("id = ?", uuid(randomUUID()))
+                    )
+                )
+            }
         }
             .isInstanceOf(OptimisticLockException::class.java)
-            .hasMessage("Condition was not satisfied. Table: [repo_test], condition: [id = ?]")
+            .hasMessage("Condition was not satisfied")
     }
 
     companion object {
@@ -379,9 +435,10 @@ class RepoTest : TestContainersSetup() {
         @JvmStatic
         fun initSetup() {
             repo = Repo(dataSource())
-            repo.access { da ->
-                da.execute(
-                    """
+            repo.access { a ->
+                a.execute(
+                    rawUpdate(
+                        """
                 create table if not exists repo_test (
                     id uuid null,
                     age int null,
@@ -392,13 +449,16 @@ class RepoTest : TestContainersSetup() {
                     tags text[] null
                 )
                 """.trimIndent()
+                    )
                 )
-                da.execute(
-                    """
+                a.execute(
+                    rawUpdate(
+                        """
                 create table if not exists repo_pk_test (
                     id uuid primary key not null
                 )
                 """.trimIndent()
+                    )
                 )
             }
         }

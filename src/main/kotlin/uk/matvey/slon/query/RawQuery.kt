@@ -1,14 +1,14 @@
 package uk.matvey.slon.query
 
-import uk.matvey.slon.param.Param
 import uk.matvey.slon.RecordReader
+import uk.matvey.slon.param.Param
 import java.sql.Connection
 
-class Select<T>(
+class RawQuery<T>(
     private val query: String,
     private val params: List<Param>,
     private val read: (RecordReader) -> T,
-) : Query<List<T>>{
+) : Query<List<T>> {
 
     override fun execute(connection: Connection): List<T> {
         return connection.prepareStatement(query).use { statement ->
@@ -23,6 +23,13 @@ class Select<T>(
                 }
                 list
             }
+        }
+    }
+
+    companion object {
+
+        fun <T> rawQuery(query: String, params: List<Param>, read: (RecordReader) -> T): RawQuery<T> {
+            return RawQuery(query, params, read)
         }
     }
 }
