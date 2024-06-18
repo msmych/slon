@@ -2,7 +2,7 @@ package uk.matvey.slon.param
 
 import java.sql.PreparedStatement
 
-class RawParam(private val value: String) : Param() {
+class PlainParam(private val value: String) : Param() {
 
     override val stringValue = this.value
 
@@ -12,10 +12,10 @@ class RawParam(private val value: String) : Param() {
 
     companion object {
 
-        fun raw(value: String) = RawParam(value)
+        fun plainParam(value: String) = PlainParam(value)
 
-        fun genRandomUuid() = raw("gen_random_uuid()")
+        fun genRandomUuid() = plainParam("gen_random_uuid()")
 
-        fun now() = raw("now()")
+        fun now() = plainParam("now()")
     }
 }

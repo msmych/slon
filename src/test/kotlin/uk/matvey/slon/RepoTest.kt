@@ -12,7 +12,7 @@ import uk.matvey.slon.exception.PgUniqueViolationException
 import uk.matvey.slon.param.ArrayParam.Companion.textArray
 import uk.matvey.slon.param.IntParam.Companion.int
 import uk.matvey.slon.param.JsonbParam.Companion.jsonb
-import uk.matvey.slon.param.RawParam.Companion.genRandomUuid
+import uk.matvey.slon.param.PlainParam.Companion.genRandomUuid
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.param.UuidParam.Companion.uuid
@@ -107,7 +107,7 @@ class RepoTest : TestContainersSetup() {
         // given
         val name = randomUUID().toString()
 
-        // when / then
+        // when
         repo.access { a ->
             a.execute(
                 insertInto("repo_test")
@@ -119,15 +119,9 @@ class RepoTest : TestContainersSetup() {
             )
         }
 
-        val result = repo.access { a ->
-            a.execute(
-                rawQuery(
-                    "select * from repo_test where name = ?",
-                    listOf(text(name))
-                ) { r ->
-                    assertThat(r.string("name")).isEqualTo(name)
-                }
-            )
+        // then
+        val result = repo.query("select * from repo_test where name = ?", listOf(text(name))) { r ->
+            assertThat(r.string("name")).isEqualTo(name)
         }
         assertThat(result).hasSize(3)
     }
@@ -147,7 +141,7 @@ class RepoTest : TestContainersSetup() {
             val id = randomUUID().takeUnless { k == "id" }
             val name = randomUUID().toString()
 
-            // when / then
+            // when
             repo.access { a ->
                 a.execute(
                     insert(
@@ -163,17 +157,15 @@ class RepoTest : TestContainersSetup() {
                 )
             }
 
+            // then
             val (condition, conditionParam) = if (k == "id") {
                 "name = ?" to text(name)
             } else {
                 "id = ?" to uuid(id)
             }
-            val result = repo.access { a ->
-                a.execute(rawQuery("select * from repo_test where $condition", listOf(conditionParam)) { r ->
-                    assertThat(r.nullableRaw(k)).isNull()
-                })
+            repo.queryOne("select * from repo_test where $condition", listOf(conditionParam)) { r ->
+                assertThat(r.nullableRaw(k)).isNull()
             }
-            assertThat(result).hasSize(1)
         }
     }
 
@@ -197,7 +189,7 @@ class RepoTest : TestContainersSetup() {
             )
         }
 
-        // when / then
+        // when
         repo.access { a ->
             a.execute(
                 update("repo_test")
@@ -206,15 +198,10 @@ class RepoTest : TestContainersSetup() {
             )
         }
 
-        val result = repo.access { a ->
-            a.execute(rawQuery(
-                "select * from repo_test where id = ?",
-                listOf(uuid(id))
-            ) { r ->
-                assertThat(r.string("name")).isEqualTo(newName)
-            })
+        // then
+        repo.queryOne("select * from repo_test where id = ?", listOf(uuid(id))) { r ->
+            assertThat(r.string("name")).isEqualTo(newName)
         }
-        assertThat(result).hasSize(1)
     }
 
     @Test
@@ -237,12 +224,12 @@ class RepoTest : TestContainersSetup() {
             )
         }
 
-        // when / then
+        // when
         repo.access { a -> a.execute(deleteFrom("repo_test").where("id = ?", uuid(id))) }
 
-        val result =
-            repo.access { a -> a.execute(rawQuery("select * from repo_test where id = ?", listOf(uuid(id))) {}) }
-        assertThat(result).isEmpty()
+        // then
+        val result = repo.queryOneNullable("select * from repo_test where id = ?", listOf(uuid(id))) {}
+        assertThat(result).isNull()
     }
 
     @Test
@@ -263,7 +250,7 @@ class RepoTest : TestContainersSetup() {
             )
         }
 
-        // when / then
+        // when
         repo.access { a ->
             a.execute(
                 insert(
@@ -283,15 +270,12 @@ class RepoTest : TestContainersSetup() {
             )
         }
 
-        val result = repo.access { a ->
-            a.execute(
-                rawQuery(
-                    "select * from repo_test where id in (?, ?, ?) order by id",
-                    listOf(uuid(id1), uuid(id2), uuid(id3)),
-                    RepoTestRecord::from
-                )
-            )
-        }
+        // then
+        val result = repo.query(
+            "select * from repo_test where id in (?, ?, ?) order by id",
+            listOf(uuid(id1), uuid(id2), uuid(id3)),
+            RepoTestRecord::from
+        )
         assertThat(result).hasSize(2)
         assertThat(result[0].id).isEqualTo(id1)
         assertThat(result[0].name).isEqualTo(newName)
@@ -304,6 +288,7 @@ class RepoTest : TestContainersSetup() {
         // given
         val name = randomUUID().toString()
 
+        // when
         repo.access { a ->
             a.execute(
                 insert(
@@ -319,12 +304,10 @@ class RepoTest : TestContainersSetup() {
             )
         }
 
-        val result = repo.access { a ->
-            a.execute(rawQuery("select * from repo_test where name = ?", listOf(text(name))) { r ->
-                assertThat(r.uuid("id")).isNotNull()
-            })
+        // then
+        repo.queryOne("select * from repo_test where name = ?", listOf(text(name))) { r ->
+            assertThat(r.uuid("id")).isNotNull()
         }
-        assertThat(result).hasSize(1)
     }
 
     @Test
@@ -357,7 +340,7 @@ class RepoTest : TestContainersSetup() {
     }
 
     @Test
-    fun `should insert returning star`() {
+    fun `should insert returning all`() {
         // when
         val result = repo.access { a ->
             a.execute(

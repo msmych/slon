@@ -5,6 +5,7 @@ import org.postgresql.util.PSQLState.NOT_NULL_VIOLATION
 import org.postgresql.util.PSQLState.UNIQUE_VIOLATION
 import uk.matvey.slon.exception.PgNotNullViolationException
 import uk.matvey.slon.exception.PgUniqueViolationException
+import uk.matvey.slon.param.Param
 import javax.sql.DataSource
 
 class Repo(private val dataSource: DataSource) {
@@ -28,5 +29,29 @@ class Repo(private val dataSource: DataSource) {
                 }
             }
         }
+    }
+
+    fun <T> query(
+        query: String,
+        params: List<Param> = listOf(),
+        read: (RecordReader) -> T
+    ): List<T> {
+        return access { a -> a.query(query, params, read) }
+    }
+
+    fun <T> queryOne(
+        query: String,
+        params: List<Param> = listOf(),
+        reader: (RecordReader) -> T
+    ): T {
+        return access { a -> a.queryOne(query, params, reader) }
+    }
+
+    fun <T> queryOneNullable(
+        query: String,
+        params: List<Param> = listOf(),
+        reader: (RecordReader) -> T
+    ): T? {
+        return access { a -> a.queryOneNullable(query, params, reader) }
     }
 }
