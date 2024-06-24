@@ -1,12 +1,11 @@
 package uk.matvey.slon.query.update
 
 import uk.matvey.slon.exception.OptimisticLockException
-import uk.matvey.slon.query.Query
 import java.sql.Connection
 
 class OptimisticUpdateQuery(
-    private val update: Query<Int>,
-) : Query<Int> {
+    private val update: Update,
+) : Update {
 
     override fun execute(connection: Connection): Int {
         val count = update.execute(connection)
@@ -18,7 +17,7 @@ class OptimisticUpdateQuery(
 
     companion object {
 
-        fun optimistic(update: Query<Int>): OptimisticUpdateQuery {
+        fun optimistic(update: Update): OptimisticUpdateQuery {
             return OptimisticUpdateQuery(update)
         }
     }

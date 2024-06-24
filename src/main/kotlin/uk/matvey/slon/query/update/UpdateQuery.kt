@@ -1,7 +1,7 @@
 package uk.matvey.slon.query.update
 
 import uk.matvey.slon.param.Param
-import uk.matvey.slon.query.Query
+import uk.matvey.slon.query.update.OptimisticUpdateQuery.Companion.optimistic
 import java.sql.Connection
 
 class UpdateQuery(
@@ -9,7 +9,7 @@ class UpdateQuery(
     private val values: List<Pair<String, Param>>,
     private var condition: String,
     private var conditionParams: List<Param>,
-) : Query<Int> {
+) : Update {
 
     override fun execute(connection: Connection): Int {
         val sets = values.joinToString { (k, v) -> "$k = ${v.stringValue}" }
@@ -17,6 +17,8 @@ class UpdateQuery(
         val params = values.map { it.second } + conditionParams
         return RawUpdateQuery(query, params).execute(connection)
     }
+
+    fun optimistic() = optimistic(this)
 
     class Builder(
         private val table: String,

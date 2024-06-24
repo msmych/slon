@@ -8,6 +8,7 @@ class InsertBuilder(
     private val table: String,
 ) {
 
+    private var onConflict: String? = null
     private lateinit var columns: List<String>
     private val values = mutableListOf<List<Param>>()
 
@@ -30,10 +31,16 @@ class InsertBuilder(
 
     fun set(vararg values: Pair<String, Param>) = set(values.toList())
 
-    fun build() = InsertQuery(table, columns, values)
+    fun onConflict(onConflict: String) = apply {
+        this.onConflict = onConflict
+    }
+
+    fun onConflictDoNothing() = onConflict("do nothing")
+
+    fun build() = InsertQuery(table, columns, values, onConflict)
 
     fun <T> returning(returning: List<String>, read: (RecordReader) -> T): InsertReturningQuery<T> {
-        return InsertReturningQuery(table, columns, values, returning, read)
+        return InsertReturningQuery(table, columns, values, onConflict, returning, read)
     }
 
     fun <T> returning(read: (RecordReader) -> T): InsertReturningQuery<T> {
@@ -44,8 +51,8 @@ class InsertBuilder(
 
         fun insertInto(table: String) = InsertBuilder(table)
 
-        fun insert(into: String, values: List<Pair<String, Param>>) = insertInto(into).set(values).build()
+        fun insertOne(into: String, values: List<Pair<String, Param>>) = insertInto(into).set(values).build()
 
-        fun insert(into: String, vararg values: Pair<String, Param>) = insert(into, values.toList())
+        fun insertOne(into: String, vararg values: Pair<String, Param>) = insertOne(into, values.toList())
     }
 }

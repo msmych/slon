@@ -1,13 +1,12 @@
 package uk.matvey.slon.query.update
 
 import uk.matvey.slon.param.Param
-import uk.matvey.slon.query.Query
 import java.sql.Connection
 
 class RawUpdateQuery(
     private val query: String,
     private val params: List<Param>
-) : Query<Int> {
+) : Update {
 
     override fun execute(connection: Connection): Int {
         return connection.prepareStatement(query).use { statement ->

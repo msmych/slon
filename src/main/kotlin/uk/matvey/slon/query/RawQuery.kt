@@ -25,11 +25,4 @@ class RawQuery<T>(
             }
         }
     }
-
-    companion object {
-
-        fun <T> rawQuery(query: String, params: List<Param>, read: (RecordReader) -> T): RawQuery<T> {
-            return RawQuery(query, params, read)
-        }
-    }
 }
