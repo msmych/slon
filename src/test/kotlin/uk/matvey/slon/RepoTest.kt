@@ -5,7 +5,6 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import uk.matvey.slon.InsertBuilder.Companion.insertInto
-import uk.matvey.slon.InsertBuilder.Companion.insertOne
 import uk.matvey.slon.exception.PgNotNullViolationException
 import uk.matvey.slon.exception.PgUniqueViolationException
 import uk.matvey.slon.param.ArrayParam.Companion.textArray
@@ -16,7 +15,6 @@ import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.param.UuidParam.Companion.uuid
 import uk.matvey.slon.query.update.DeleteQuery.Builder.Companion.deleteFrom
-import uk.matvey.slon.query.update.RawUpdateQuery.Companion.rawUpdate
 import uk.matvey.slon.query.update.UpdateQuery.Builder.Companion.update
 import java.time.Instant
 import java.time.temporal.ChronoUnit.MILLIS
@@ -74,20 +72,16 @@ class RepoTest : TestContainersSetup() {
             val name = randomUUID().toString()
 
             // when
-            repo.access { a ->
-                a.execute(
-                    insertOne(
-                        "repo_test",
-                        "id" to uuid(id),
-                        "age" to int(age.takeUnless { k == "age" }),
-                        "code" to int(code.takeUnless { k == "code" }),
-                        "name" to text(name.takeUnless { k == "name" }),
-                        "created_at" to timestamp(createdAt.takeUnless { k == "created_at" }),
-                        "details" to jsonb(details.takeUnless { k == "details" }),
-                        "tags" to textArray(tags.takeUnless { k == "tags" }),
-                    )
-                )
-            }
+            repo.insertOne(
+                "repo_test",
+                "id" to uuid(id),
+                "age" to int(age.takeUnless { k == "age" }),
+                "code" to int(code.takeUnless { k == "code" }),
+                "name" to text(name.takeUnless { k == "name" }),
+                "created_at" to timestamp(createdAt.takeUnless { k == "created_at" }),
+                "details" to jsonb(details.takeUnless { k == "details" }),
+                "tags" to textArray(tags.takeUnless { k == "tags" }),
+            )
 
             // then
             val (condition, conditionParam) = if (k == "id") {
@@ -109,24 +103,20 @@ class RepoTest : TestContainersSetup() {
         val id3 = UUID.fromString("d5ffb4cd-583b-4423-b25b-af8882aa057e")
         val newName = randomUUID().toString()
 
-        repo.access { a ->
-            a.execute(
-                insertInto("repo_test")
-                    .columns("id", "name")
-                    .values(uuid(id1), text(name))
-                    .values(uuid(id2), text(name))
-                    .build()
-            )
-        }
+        repo.execute(
+            insertInto("repo_test")
+                .columns("id", "name")
+                .values(uuid(id1), text(name))
+                .values(uuid(id2), text(name))
+                .build()
+        )
 
         // when
         repo.access { a ->
-            a.execute(
-                insertOne(
-                    "repo_test",
-                    "id" to uuid(id3),
-                    "name" to text(name)
-                )
+            a.insertOne(
+                "repo_test",
+                "id" to uuid(id3),
+                "name" to text(name)
             )
             a.execute(
                 update("repo_test")
@@ -158,20 +148,16 @@ class RepoTest : TestContainersSetup() {
         val name = randomUUID().toString()
 
         // when
-        repo.access { a ->
-            a.execute(
-                insertOne(
-                    "repo_test",
-                    "id" to genRandomUuid(),
-                    "age" to int(age),
-                    "code" to int(code),
-                    "name" to text(name),
-                    "created_at" to timestamp(createdAt),
-                    "details" to jsonb(details),
-                    "tags" to textArray(tags),
-                )
-            )
-        }
+        repo.insertOne(
+            "repo_test",
+            "id" to genRandomUuid(),
+            "age" to int(age),
+            "code" to int(code),
+            "name" to text(name),
+            "created_at" to timestamp(createdAt),
+            "details" to jsonb(details),
+            "tags" to textArray(tags),
+        )
 
         // then
         repo.queryOne("select * from repo_test where name = ?", listOf(text(name))) { r ->
@@ -186,7 +172,7 @@ class RepoTest : TestContainersSetup() {
 
         // when / then
         repo.access { a ->
-            a.execute(insertOne("repo_test", "id" to genRandomUuid(), "name" to text(name)))
+            a.insertOne("repo_test", "id" to genRandomUuid(), "name" to text(name))
             val record = a.queryOne("select * from repo_test where name = ?", listOf(text(name)), RepoTestRecord::from)
             assertThat(record.name).isEqualTo(name)
         }
@@ -195,13 +181,7 @@ class RepoTest : TestContainersSetup() {
     @Test
     fun `should throw not null violation exception`() {
         // when / then
-        assertThatThrownBy {
-            repo.access { a ->
-                a.execute(
-                    insertOne("repo_pk_test", "id" to uuid(null))
-                )
-            }
-        }
+        assertThatThrownBy { repo.insertOne("repo_pk_test", "id" to uuid(null)) }
             .isInstanceOf(PgNotNullViolationException::class.java)
     }
 
@@ -209,10 +189,10 @@ class RepoTest : TestContainersSetup() {
     fun `should throw unique violation exception`() {
         // given
         val id = randomUUID()
-        repo.access { a -> a.execute(insertOne("repo_pk_test", "id" to uuid(id))) }
+        repo.insertOne("repo_pk_test", "id" to uuid(id))
 
         // when / then
-        assertThatThrownBy { repo.access { a -> a.execute(insertOne("repo_pk_test", "id" to uuid(id))) } }
+        assertThatThrownBy { repo.insertOne("repo_pk_test", "id" to uuid(id)) }
             .isInstanceOf(PgUniqueViolationException::class.java)
     }
 
@@ -225,9 +205,8 @@ class RepoTest : TestContainersSetup() {
         fun initSetup() {
             repo = Repo(dataSource())
             repo.access { a ->
-                a.execute(
-                    rawUpdate(
-                        """
+                a.executePlain(
+                    """
                 create table if not exists repo_test (
                     id uuid null,
                     age int null,
@@ -238,16 +217,13 @@ class RepoTest : TestContainersSetup() {
                     tags text[] null
                 )
                 """.trimIndent()
-                    )
                 )
-                a.execute(
-                    rawUpdate(
-                        """
+                a.executePlain(
+                    """
                 create table if not exists repo_pk_test (
                     id uuid primary key not null
                 )
                 """.trimIndent()
-                    )
                 )
             }
         }

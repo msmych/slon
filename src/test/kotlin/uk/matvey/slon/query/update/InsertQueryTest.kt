@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import uk.matvey.slon.InsertBuilder.Companion.insertInto
-import uk.matvey.slon.InsertBuilder.Companion.insertOne
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.Repo
 import uk.matvey.slon.TestContainersSetup
@@ -14,7 +13,6 @@ import uk.matvey.slon.param.PlainParam.Companion.plainParam
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.param.UuidParam.Companion.uuid
-import uk.matvey.slon.query.update.RawUpdateQuery.Companion.rawUpdate
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit.MILLIS
@@ -48,16 +46,12 @@ class InsertQueryTest : TestContainersSetup() {
         val createdAt = Instant.now().truncatedTo(MILLIS)
 
         // when / then
-        repo.access { a ->
-            a.execute(
-                insertOne(
-                    "insert_query_test",
-                    "id" to uuid(id),
-                    "name" to text(name),
-                    "created_at" to timestamp(createdAt),
-                )
-            )
-        }
+        repo.insertOne(
+            "insert_query_test",
+            "id" to uuid(id),
+            "name" to text(name),
+            "created_at" to timestamp(createdAt),
+        )
 
         val result = repo.queryOne(
             "select * from insert_query_test where id = ?",
@@ -76,16 +70,14 @@ class InsertQueryTest : TestContainersSetup() {
         val name = randomUUID().toString()
 
         // when
-        repo.access { a ->
-            a.execute(
-                insertInto("insert_query_test")
-                    .columns("id", "name", "created_at")
-                    .values(uuid(randomUUID()), text(name), now())
-                    .values(uuid(randomUUID()), text(name), plainParam("now() + interval '1 hours'"))
-                    .values(uuid(randomUUID()), text(name), plainParam("now() + interval '2 hours'"))
-                    .build()
-            )
-        }
+        repo.execute(
+            insertInto("insert_query_test")
+                .columns("id", "name", "created_at")
+                .values(uuid(randomUUID()), text(name), now())
+                .values(uuid(randomUUID()), text(name), plainParam("now() + interval '1 hours'"))
+                .values(uuid(randomUUID()), text(name), plainParam("now() + interval '2 hours'"))
+                .build()
+        )
 
         // then
         val result = repo.query("select * from insert_query_test where name = ?", listOf(text(name))) { r ->
@@ -100,30 +92,24 @@ class InsertQueryTest : TestContainersSetup() {
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomUUID().toString()
 
-        repo.access { a ->
-            a.execute(
-                insertOne(
-                    "insert_query_test",
+        repo.insertOne(
+            "insert_query_test",
+            "id" to genRandomUuid(),
+            "name" to text(name),
+            "created_at" to timestamp(createdAt)
+        )
+
+        // when
+        repo.execute(
+            insertInto("insert_query_test")
+                .set(
                     "id" to genRandomUuid(),
                     "name" to text(name),
                     "created_at" to timestamp(createdAt)
                 )
-            )
-        }
-
-        // when
-        repo.access { a ->
-            a.execute(
-                insertInto("insert_query_test")
-                    .set(
-                        "id" to genRandomUuid(),
-                        "name" to text(name),
-                        "created_at" to timestamp(createdAt)
-                    )
-                    .onConflict("(created_at) do update set created_at = excluded.created_at + interval '1 hours'")
-                    .build()
-            )
-        }
+                .onConflict("(created_at) do update set created_at = excluded.created_at + interval '1 hours'")
+                .build()
+        )
 
         // then
         val result = repo.queryOneNullable("select * from insert_query_test where name = ?", listOf(text(name))) { r ->
@@ -138,30 +124,24 @@ class InsertQueryTest : TestContainersSetup() {
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomUUID().toString()
 
-        repo.access { a ->
-            a.execute(
-                insertOne(
-                    "insert_query_test",
+        repo.insertOne(
+            "insert_query_test",
+            "id" to genRandomUuid(),
+            "name" to text(name),
+            "created_at" to timestamp(createdAt)
+        )
+
+        // when
+        repo.execute(
+            insertInto("insert_query_test")
+                .set(
                     "id" to genRandomUuid(),
                     "name" to text(name),
                     "created_at" to timestamp(createdAt)
                 )
-            )
-        }
-
-        // when
-        repo.access { a ->
-            a.execute(
-                insertInto("insert_query_test")
-                    .set(
-                        "id" to genRandomUuid(),
-                        "name" to text(name),
-                        "created_at" to timestamp(createdAt)
-                    )
-                    .onConflictDoNothing()
-                    .build()
-            )
-        }
+                .onConflictDoNothing()
+                .build()
+        )
 
         // then
         val result = repo.queryOneNullable("select * from insert_query_test where name = ?", listOf(text(name))) { r ->
@@ -179,22 +159,18 @@ class InsertQueryTest : TestContainersSetup() {
         fun initSetup() {
             repo = Repo(dataSource())
             repo.access { a ->
-                a.execute(
-                    rawUpdate(
-                        """
+                a.executePlain(
+                    """
                 create table if not exists insert_query_test (
                     id uuid null,
                     name text null,
                     created_at timestamp not null
                 )
                 """.trimIndent()
-                    )
                 )
-                a.execute(
-                    rawUpdate(
-                        """create unique index if not exists insert_query_test_created_at_idx
+                a.executePlain(
+                    """create unique index if not exists insert_query_test_created_at_idx
                     | on insert_query_test (created_at)""".trimMargin()
-                    )
                 )
             }
         }

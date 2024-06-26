@@ -3,6 +3,7 @@ package uk.matvey.slon
 import uk.matvey.slon.param.Param
 import uk.matvey.slon.query.Query
 import uk.matvey.slon.query.RawQuery
+import uk.matvey.slon.query.update.RawUpdateQuery.Companion.rawUpdate
 import java.sql.Connection
 import java.sql.Connection.TRANSACTION_READ_COMMITTED
 
@@ -15,6 +16,14 @@ class Access(private val connection: Connection) {
 
     fun <T> execute(query: Query<T>): T {
         return query.execute(connection)
+    }
+
+    fun executePlain(query: String) {
+        execute(rawUpdate(query))
+    }
+
+    fun insertOne(into: String, vararg values: Pair<String, Param>) {
+        InsertBuilder.insertOne(into, *values).execute(connection)
     }
 
     fun <T> query(

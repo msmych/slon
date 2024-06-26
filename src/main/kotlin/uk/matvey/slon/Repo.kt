@@ -6,6 +6,7 @@ import org.postgresql.util.PSQLState.UNIQUE_VIOLATION
 import uk.matvey.slon.exception.PgNotNullViolationException
 import uk.matvey.slon.exception.PgUniqueViolationException
 import uk.matvey.slon.param.Param
+import uk.matvey.slon.query.Query
 import javax.sql.DataSource
 
 class Repo(private val dataSource: DataSource) {
@@ -29,6 +30,18 @@ class Repo(private val dataSource: DataSource) {
                 }
             }
         }
+    }
+
+    fun <T> execute(query: Query<T>): T {
+        return access { a -> a.execute(query) }
+    }
+
+    fun executePlain(query: String) {
+        access { a -> a.executePlain(query) }
+    }
+
+    fun insertOne(into: String, vararg values: Pair<String, Param>) {
+        access { a -> a.insertOne(into, *values) }
     }
 
     fun <T> query(

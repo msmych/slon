@@ -3,13 +3,11 @@ package uk.matvey.slon.query.update
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import uk.matvey.slon.InsertBuilder.Companion.insertOne
 import uk.matvey.slon.Repo
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.UuidParam.Companion.uuid
 import uk.matvey.slon.query.update.DeleteQuery.Builder.Companion.deleteFrom
-import uk.matvey.slon.query.update.RawUpdateQuery.Companion.rawUpdate
 import java.util.UUID.randomUUID
 
 class DeleteQueryTest : TestContainersSetup() {
@@ -19,18 +17,10 @@ class DeleteQueryTest : TestContainersSetup() {
         // given
         val id = randomUUID()
 
-        repo.access { a ->
-            a.execute(
-                insertOne(
-                    "delete_query_test",
-                    "id" to uuid(id),
-                    "name" to text(randomUUID().toString()),
-                )
-            )
-        }
+        repo.insertOne("delete_query_test", "id" to uuid(id), "name" to text(randomUUID().toString()))
 
         // when
-        repo.access { a -> a.execute(deleteFrom("delete_query_test").where("id = ?", uuid(id))) }
+        repo.execute(deleteFrom("delete_query_test").where("id = ?", uuid(id)))
 
         // then
         val result = repo.queryOneNullable("select * from delete_query_test where id = ?", listOf(uuid(id))) {}
@@ -45,18 +35,14 @@ class DeleteQueryTest : TestContainersSetup() {
         @JvmStatic
         fun initSetup() {
             repo = Repo(dataSource())
-            repo.access { a ->
-                a.execute(
-                    rawUpdate(
-                        """
+            repo.executePlain(
+                """
                 create table if not exists delete_query_test (
                     id uuid null,
                     name text null
                 )
                 """.trimIndent()
-                    )
-                )
-            }
+            )
         }
     }
 }
