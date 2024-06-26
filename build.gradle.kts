@@ -83,7 +83,7 @@ publishing {
     }
 }
 
-val releaseVersion = project.findProperty("releaseVersion") ?: "SNAPSHOT"
+val releaseVersion = project.findProperty("releaseVersion") ?: "0.1.0-SNAPSHOT"
 
 jreleaser {
     signing {
@@ -92,6 +92,9 @@ jreleaser {
     }
     deploy {
         maven {
+            github {
+                enabled = false
+            }
             mavenCentral {
                 create("sonatype") {
                     setActive("ALWAYS")
