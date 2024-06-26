@@ -92,9 +92,6 @@ jreleaser {
     }
     deploy {
         maven {
-            github {
-                enabled = false
-            }
             mavenCentral {
                 create("sonatype") {
                     setActive("ALWAYS")
