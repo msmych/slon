@@ -53,6 +53,14 @@ class RecordReader(private val resultSet: ResultSet) {
 
     fun instant(index: Int) = requireNotNull(nullableInstant(index))
 
+    fun nullableLocalDate(name: String) = resultSet.getDate(name)?.nullable()?.toLocalDate()
+
+    fun nullableLocalDate(index: Int) = resultSet.getDate(index)?.nullable()?.toLocalDate()
+
+    fun localDate(name: String) = requireNotNull(nullableLocalDate(name))
+
+    fun localDate(index: Int) = requireNotNull(nullableLocalDate(index))
+
     @Suppress("UNCHECKED_CAST")
     fun nullableStringList(name: String) = (resultSet.getArray(name)?.nullable()?.array as Array<String>?)?.toList()
 

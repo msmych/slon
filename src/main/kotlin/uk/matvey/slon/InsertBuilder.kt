@@ -43,9 +43,18 @@ class InsertBuilder(
         return InsertReturningQuery(table, columns, values, onConflict, returning, read)
     }
 
+    fun <T> returningOne(returning: List<String>, read: (RecordReader) -> T) = returning(returning, read).one()
+
+    fun <T> returningOneNullable(returning: List<String>, read: (RecordReader) -> T) =
+        returning(returning, read).oneNullable()
+
     fun <T> returning(read: (RecordReader) -> T): InsertReturningQuery<T> {
         return returning(listOf("*"), read)
     }
+
+    fun <T> returningOne(read: (RecordReader) -> T) = returning(read).one()
+
+    fun <T> returningOneNullable(read: (RecordReader) -> T) = returning(read).oneNullable()
 
     companion object {
 

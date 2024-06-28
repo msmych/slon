@@ -37,16 +37,16 @@ class Access(private val connection: Connection) {
     fun <T> queryOneNullable(
         query: String,
         params: List<Param> = listOf(),
-        reader: (RecordReader) -> T
+        read: (RecordReader) -> T
     ): T? {
-        return query(query, params, reader).singleOrNull()
+        return execute(RawQuery(query, params, read).oneNullable())
     }
 
     fun <T> queryOne(
         query: String,
         params: List<Param> = listOf(),
-        reader: (RecordReader) -> T
+        read: (RecordReader) -> T
     ): T {
-        return query(query, params, reader).single()
+        return execute(RawQuery(query, params, read).one())
     }
 }

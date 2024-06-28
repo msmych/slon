@@ -8,6 +8,7 @@ import uk.matvey.slon.InsertBuilder.Companion.insertInto
 import uk.matvey.slon.exception.PgNotNullViolationException
 import uk.matvey.slon.exception.PgUniqueViolationException
 import uk.matvey.slon.param.ArrayParam.Companion.textArray
+import uk.matvey.slon.param.DateParam.Companion.date
 import uk.matvey.slon.param.IntParam.Companion.int
 import uk.matvey.slon.param.JsonbParam.Companion.jsonb
 import uk.matvey.slon.param.PlainParam.Companion.genRandomUuid
@@ -17,6 +18,7 @@ import uk.matvey.slon.param.UuidParam.Companion.uuid
 import uk.matvey.slon.query.update.DeleteQuery.Builder.Companion.deleteFrom
 import uk.matvey.slon.query.update.UpdateQuery.Builder.Companion.update
 import java.time.Instant
+import java.time.LocalDate
 import java.time.temporal.ChronoUnit.MILLIS
 import java.util.UUID
 import java.util.UUID.randomUUID
@@ -26,6 +28,7 @@ class RepoTest : TestContainersSetup() {
     private val name = "name"
     private val age = 27
     private val code = 9_999_999_999_999
+    private val birthDate = LocalDate.now()
     private val createdAt = Instant.now().truncatedTo(MILLIS)
     private val details = """{"key": "value"}"""
     private val tags = listOf("tag1", "tag2")
@@ -35,6 +38,7 @@ class RepoTest : TestContainersSetup() {
         val age: Int?,
         val code: Long?,
         val name: String?,
+        val birthDate: LocalDate?,
         val createdAt: Instant?,
         val details: String?,
         val tags: List<String>?,
@@ -48,6 +52,7 @@ class RepoTest : TestContainersSetup() {
                     reader.nullableInt("age"),
                     reader.nullableLong("code"),
                     reader.nullableString("name"),
+                    reader.nullableLocalDate("birth_date"),
                     reader.nullableInstant("created_at"),
                     reader.nullableString("details"),
                     reader.nullableStringList("tags"),
@@ -63,6 +68,7 @@ class RepoTest : TestContainersSetup() {
             "age",
             "code",
             "name",
+            "birth_date",
             "created_at",
             "details",
             "tags",
@@ -78,6 +84,7 @@ class RepoTest : TestContainersSetup() {
                 "age" to int(age.takeUnless { k == "age" }),
                 "code" to int(code.takeUnless { k == "code" }),
                 "name" to text(name.takeUnless { k == "name" }),
+                "birth_date" to date(birthDate.takeUnless { k == "birth_date" }),
                 "created_at" to timestamp(createdAt.takeUnless { k == "created_at" }),
                 "details" to jsonb(details.takeUnless { k == "details" }),
                 "tags" to textArray(tags.takeUnless { k == "tags" }),
@@ -154,6 +161,7 @@ class RepoTest : TestContainersSetup() {
             "age" to int(age),
             "code" to int(code),
             "name" to text(name),
+            "birth_date" to date(birthDate),
             "created_at" to timestamp(createdAt),
             "details" to jsonb(details),
             "tags" to textArray(tags),
@@ -161,7 +169,7 @@ class RepoTest : TestContainersSetup() {
 
         // then
         repo.queryOne("select * from repo_test where name = ?", listOf(text(name))) { r ->
-            assertThat(r.uuid("id")).isNotNull()
+            assertThat(r.uuid("id")).isNotNull
         }
     }
 
@@ -212,6 +220,7 @@ class RepoTest : TestContainersSetup() {
                     age int null,
                     code bigint null,
                     name text null,
+                    birth_date date null,
                     created_at timestamp null,
                     details jsonb null,
                     tags text[] null

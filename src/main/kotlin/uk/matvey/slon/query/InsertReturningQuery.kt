@@ -24,4 +24,12 @@ class InsertReturningQuery<T>(
         val params = this.values.flatten()
         return RawQuery(query, params, read).execute(connection)
     }
+
+    fun one(): OneQuery<T> {
+        return OneQuery(this)
+    }
+
+    fun oneNullable(): OneNullableQuery<T> {
+        return OneNullableQuery(this)
+    }
 }

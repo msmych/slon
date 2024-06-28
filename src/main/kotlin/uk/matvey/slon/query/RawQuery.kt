@@ -25,4 +25,12 @@ class RawQuery<T>(
             }
         }
     }
+
+    fun one(): OneQuery<T> {
+        return OneQuery(this)
+    }
+
+    fun oneNullable(): OneNullableQuery<T> {
+        return OneNullableQuery(this)
+    }
 }

@@ -37,11 +37,11 @@ class InsertReturningQueryTest : TestContainersSetup() {
         val result = repo.execute(
             insertInto("insert_returning_query_test")
                 .set("id" to genRandomUuid(), "created_at" to now())
-                .returning(listOf("id")) { r -> r.uuid("id") }
+                .returningOneNullable(listOf("id")) { r -> r.uuid("id") }
         )
 
         // then
-        assertThat(result).hasSize(1)
+        assertThat(result).isNotNull
     }
 
     @Test
@@ -50,11 +50,11 @@ class InsertReturningQueryTest : TestContainersSetup() {
         val result = repo.execute(
             insertInto("insert_returning_query_test")
                 .set("id" to genRandomUuid(), "name" to text(randomUUID().toString()), "created_at" to now())
-                .returning(InsertReturningQueryTestRecord::from)
+                .returningOneNullable(InsertReturningQueryTestRecord::from)
         )
 
         // then
-        assertThat(result).hasSize(1)
+        assertThat(result).isNotNull
     }
 
     @Test
