@@ -7,11 +7,20 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/msmych/kit")
+        credentials {
+            username = "GitHubPackages-RO"
+            password = project.findProperty("ghPackagesRoToken") as? String ?: System.getenv("GH_PACKAGES_RO_TOKEN")
+        }
+    }
 }
 
 val assertjVersion: String by project
 val hikariCpVersion: String by project
 val junitVersion: String by project
+val kitVersion: String by project
 val kotlinLoggingJvmVersion: String by project
 val logbackClassicVersion: String by project
 val postgresqlVersion: String by project
@@ -22,6 +31,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:$hikariCpVersion")
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingJvmVersion")
     implementation("org.postgresql:postgresql:$postgresqlVersion")
+    implementation("uk.matvey:kit:$kitVersion")
 
     testImplementation(platform("org.junit:junit-bom:$junitVersion"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -42,11 +52,14 @@ java {
     withSourcesJar()
 }
 
+val slonVersion = project.findProperty("releaseVersion") as? String ?: "0.1.0-SNAPSHOT"
+
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             groupId = "uk.matvey"
             artifactId = "slon"
+            version = slonVersion
 
             from(components["java"])
 
@@ -77,13 +90,19 @@ publishing {
 
         repositories {
             maven {
-                url = uri(layout.buildDirectory.dir("staging-deploy"))
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/msmych/kit")
+                credentials {
+                    username = System.getenv("GITHUB_ACTOR")
+                    password = System.getenv("GH_TOKEN")
+                }
             }
+//            maven {
+//                url = uri(layout.buildDirectory.dir("staging-deploy"))
+//            }
         }
     }
 }
-
-val releaseVersion = project.findProperty("releaseVersion") ?: "0.1.0-SNAPSHOT"
 
 jreleaser {
     signing {
@@ -103,6 +122,6 @@ jreleaser {
             }
         }
         group = "uk.matvey"
-        version = releaseVersion
+        version = slonVersion
     }
 }

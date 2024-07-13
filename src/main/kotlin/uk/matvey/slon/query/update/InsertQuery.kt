@@ -7,7 +7,7 @@ class InsertQuery(
     private val table: String,
     private val columns: List<String>,
     private val values: List<List<Param>>,
-    private val onConflict: String?
+    private val onConflict: Pair<List<String>, String>?
 ) : Update {
 
     override fun execute(connection: Connection): Int {
@@ -16,7 +16,12 @@ class InsertQuery(
             vs.joinToString(prefix = "(", postfix = ")", transform = Param::stringValue)
         }
         val query = "insert into $table $columns values $values" +
-            (onConflict?.let { " on conflict $it" } ?: "")
+            (onConflict?.let { (k, v) ->
+                val conflictColumns = k.takeIf { it.isNotEmpty() }
+                    ?.let { " " + it.joinToString(prefix = "(", postfix = ")") }
+                    ?: ""
+                " on conflict" + conflictColumns + " do $v"
+            } ?: "")
         val params = this.values.flatten()
         return RawUpdateQuery(query, params).execute(connection)
     }

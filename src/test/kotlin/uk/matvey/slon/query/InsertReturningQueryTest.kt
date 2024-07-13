@@ -78,7 +78,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
                     "name" to text(name),
                     "created_at" to timestamp(createdAt)
                 )
-                .onConflict("(created_at) do update set created_at = excluded.created_at + interval '1 hours'")
+                .onConflict(listOf("created_at"), "update set created_at = excluded.created_at + interval '1 hours'")
                 .build()
         )
 

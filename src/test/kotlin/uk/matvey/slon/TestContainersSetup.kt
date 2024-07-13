@@ -1,9 +1,9 @@
 package uk.matvey.slon
 
-import com.zaxxer.hikari.HikariDataSource
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.testcontainers.containers.PostgreSQLContainer
+import uk.matvey.slon.DataSourceKit.hikariDataSource
 import javax.sql.DataSource
 
 open class TestContainersSetup {
@@ -19,11 +19,7 @@ open class TestContainersSetup {
         @JvmStatic
         fun globalSetup() {
             postgres.start()
-            dataSource = HikariDataSource().apply {
-                jdbcUrl = postgres.jdbcUrl
-                username = postgres.username
-                password = postgres.password
-            }
+            dataSource = hikariDataSource(postgres.jdbcUrl, postgres.username, postgres.password)
         }
 
         @AfterAll

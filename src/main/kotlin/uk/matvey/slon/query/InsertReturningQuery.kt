@@ -8,7 +8,7 @@ class InsertReturningQuery<T>(
     private val table: String,
     private val columns: List<String>,
     private val values: List<List<Param>>,
-    private val onConflict: String?,
+    private val onConflict: Pair<List<String>, String>?,
     private val returning: List<String>,
     private val read: (RecordReader) -> T,
 ) : Query<List<T>> {
@@ -19,8 +19,15 @@ class InsertReturningQuery<T>(
             vs.joinToString(prefix = "(", postfix = ")", transform = Param::stringValue)
         }
         val returning = returning.joinToString()
-        val onConflictClause = onConflict?.let { " on conflict $it" } ?: ""
-        val query = "insert into $table $columns values $values$onConflictClause returning $returning"
+        val onConflictClause = onConflict?.let { (k, v) ->
+            val conflictColumns = k.takeIf { it.isNotEmpty() }
+                ?.let { " " + it.joinToString(prefix = "(", postfix = ")") }
+                ?: ""
+            " on conflict" + conflictColumns + " do $v"
+        } ?: ""
+        val query = "insert into $table $columns values $values" +
+            onConflictClause +
+            " returning $returning"
         val params = this.values.flatten()
         return RawQuery(query, params, read).execute(connection)
     }

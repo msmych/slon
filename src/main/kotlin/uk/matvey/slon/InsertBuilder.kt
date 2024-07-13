@@ -8,7 +8,7 @@ class InsertBuilder(
     private val table: String,
 ) {
 
-    private var onConflict: String? = null
+    private var onConflict: Pair<List<String>, String>? = null
     private lateinit var columns: List<String>
     private val values = mutableListOf<List<Param>>()
 
@@ -31,11 +31,15 @@ class InsertBuilder(
 
     fun set(vararg values: Pair<String, Param>) = set(values.toList())
 
-    fun onConflict(onConflict: String) = apply {
-        this.onConflict = onConflict
+    fun onConflict(columns: List<String>, doClause: String) = apply {
+        this.onConflict = columns to doClause
     }
 
-    fun onConflictDoNothing() = onConflict("do nothing")
+    fun onConflict(doClause: String) = apply {
+        onConflict(listOf(), doClause)
+    }
+
+    fun onConflictDoNothing() = onConflict("nothing")
 
     fun build() = InsertQuery(table, columns, values, onConflict)
 
