@@ -27,10 +27,10 @@ val postgresqlVersion: String by project
 val testcontainersVersion: String by project
 
 dependencies {
+    api("org.postgresql:postgresql:$postgresqlVersion")
+    api("com.zaxxer:HikariCP:$hikariCpVersion")
     implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")
-    implementation("com.zaxxer:HikariCP:$hikariCpVersion")
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingJvmVersion")
-    implementation("org.postgresql:postgresql:$postgresqlVersion")
     implementation("uk.matvey:kit:$kitVersion")
 
     testImplementation(platform("org.junit:junit-bom:$junitVersion"))
