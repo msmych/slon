@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "2.0.0"
     `java-library`
+    `java-test-fixtures`
     `maven-publish`
     id("org.jreleaser") version "1.12.0"
 }
@@ -18,6 +19,7 @@ repositories {
 }
 
 val assertjVersion: String by project
+val flywayVersion: String by project
 val hikariCpVersion: String by project
 val junitVersion: String by project
 val kitVersion: String by project
@@ -27,20 +29,20 @@ val postgresqlVersion: String by project
 val testcontainersVersion: String by project
 
 dependencies {
-    api("org.postgresql:postgresql:$postgresqlVersion")
     api("com.zaxxer:HikariCP:$hikariCpVersion")
+    api("org.flywaydb:flyway-core:$flywayVersion")
+    api("org.postgresql:postgresql:$postgresqlVersion")
+
     implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingJvmVersion")
     implementation("uk.matvey:kit:$kitVersion")
 
-    testImplementation(platform("org.junit:junit-bom:$junitVersion"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    testImplementation("org.assertj:assertj-core:$assertjVersion")
-
-    testImplementation(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
-    testImplementation("org.testcontainers:postgresql")
+    testApi("org.assertj:assertj-core:$assertjVersion")
+    testFixturesApi(platform("org.junit:junit-bom:$junitVersion"))
+    testFixturesApi("org.junit.jupiter:junit-jupiter")
+    testFixturesApi("org.junit.platform:junit-platform-launcher")
+    testFixturesApi(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
+    testFixturesApi("org.testcontainers:postgresql")
 }
 
 tasks.test {
