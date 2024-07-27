@@ -18,7 +18,6 @@ repositories {
     }
 }
 
-val assertjVersion: String by project
 val flywayVersion: String by project
 val hikariCpVersion: String by project
 val junitVersion: String by project
@@ -40,7 +39,6 @@ dependencies {
     testFixturesImplementation("org.junit.platform:junit-platform-launcher")
     testFixturesImplementation(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
     testFixturesImplementation("org.testcontainers:postgresql")
-    testImplementation("org.assertj:assertj-core:$assertjVersion")
     testApi(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
     testApi("org.testcontainers:postgresql")
 }
