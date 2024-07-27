@@ -54,11 +54,6 @@ java {
     withSourcesJar()
 }
 
-val testFixturesSourcesJar by tasks.creating(Jar::class) {
-    archiveClassifier.set("test-fixtures")
-    from(sourceSets["testFixtures"].output)
-}
-
 val slonVersion = project.findProperty("releaseVersion") as? String ?: "0.1.0-SNAPSHOT"
 
 publishing {
@@ -69,7 +64,9 @@ publishing {
             version = slonVersion
 
             from(components["java"])
-            artifact(testFixturesSourcesJar)
+            artifact(tasks["sourcesJar"])
+            artifact(tasks["javadocJar"])
+            artifact(tasks["testFixturesJar"])
 
             pom {
                 name = "Slon"
@@ -110,6 +107,10 @@ publishing {
 //            }
         }
     }
+}
+
+tasks.withType<AbstractPublishToMaven>().configureEach {
+    dependsOn("sourcesJar", "javadocJar", "testFixturesJar")
 }
 
 jreleaser {
