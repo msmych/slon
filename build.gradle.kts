@@ -64,7 +64,6 @@ publishing {
             version = slonVersion
 
             from(components["java"])
-            artifact(tasks["testFixturesJar"])
 
             pom {
                 name = "Slon"
@@ -89,6 +88,8 @@ publishing {
                     url = "https://github.com/msmych/slon"
                 }
             }
+            suppressPomMetadataWarningsFor("testFixturesApiElements")
+            suppressPomMetadataWarningsFor("testFixturesRuntimeElements")
         }
 
         repositories {
