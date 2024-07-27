@@ -64,8 +64,6 @@ publishing {
             version = slonVersion
 
             from(components["java"])
-            artifact(tasks["sourcesJar"])
-            artifact(tasks["javadocJar"])
             artifact(tasks["testFixturesJar"])
 
             pom {
