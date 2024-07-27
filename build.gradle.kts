@@ -33,16 +33,16 @@ dependencies {
     api("org.flywaydb:flyway-core:$flywayVersion")
     api("org.postgresql:postgresql:$postgresqlVersion")
 
-    implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")
-    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingJvmVersion")
     implementation("uk.matvey:kit:$kitVersion")
 
-    testApi("org.assertj:assertj-core:$assertjVersion")
-    testFixturesApi(platform("org.junit:junit-bom:$junitVersion"))
-    testFixturesApi("org.junit.jupiter:junit-jupiter")
-    testFixturesApi("org.junit.platform:junit-platform-launcher")
-    testFixturesApi(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
-    testFixturesApi("org.testcontainers:postgresql")
+    testFixturesImplementation(platform("org.junit:junit-bom:$junitVersion"))
+    testFixturesImplementation("org.junit.jupiter:junit-jupiter")
+    testFixturesImplementation("org.junit.platform:junit-platform-launcher")
+    testFixturesImplementation(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
+    testFixturesImplementation("org.testcontainers:postgresql")
+    testImplementation("org.assertj:assertj-core:$assertjVersion")
+    testApi(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
+    testApi("org.testcontainers:postgresql")
 }
 
 tasks.test {
@@ -52,6 +52,11 @@ tasks.test {
 java {
     withJavadocJar()
     withSourcesJar()
+}
+
+val testFixturesSourcesJar by tasks.creating(Jar::class) {
+    archiveClassifier.set("test-fixtures")
+    from(sourceSets["testFixtures"].output)
 }
 
 val slonVersion = project.findProperty("releaseVersion") as? String ?: "0.1.0-SNAPSHOT"
@@ -64,6 +69,7 @@ publishing {
             version = slonVersion
 
             from(components["java"])
+            artifact(testFixturesSourcesJar)
 
             pom {
                 name = "Slon"
@@ -93,7 +99,7 @@ publishing {
         repositories {
             maven {
                 name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/msmych/kit")
+                url = uri("https://maven.pkg.github.com/msmych/slon")
                 credentials {
                     username = System.getenv("GITHUB_ACTOR")
                     password = System.getenv("GH_TOKEN")
