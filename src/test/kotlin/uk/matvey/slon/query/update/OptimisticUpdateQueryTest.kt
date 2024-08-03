@@ -1,23 +1,27 @@
 package uk.matvey.slon.query.update
 
-import org.assertj.core.api.Assertions.assertThatThrownBy
+import kotlinx.coroutines.test.runTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import uk.matvey.slon.Repo
+import org.junit.jupiter.api.assertThrows
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.exception.OptimisticLockException
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.UuidParam.Companion.uuid
 import uk.matvey.slon.query.update.DeleteQuery.Builder.Companion.deleteFrom
 import uk.matvey.slon.query.update.UpdateQuery.Builder.Companion.update
+import uk.matvey.slon.repo.Repo
+import uk.matvey.slon.repo.RepoKit.execute
+import uk.matvey.slon.repo.RepoKit.executePlain
 import java.util.UUID.randomUUID
 
 class OptimisticUpdateQueryTest : TestContainersSetup() {
 
     @Test
-    fun `should throw optimistic lock exception for update`() {
+    fun `should throw optimistic lock exception for update`() = runTest {
         // when / then
-        assertThatThrownBy {
+        val exception = assertThrows<OptimisticLockException> {
             repo.execute(
                 update("optimistic_update_query_test")
                     .set("name", text("New Name"))
@@ -25,22 +29,20 @@ class OptimisticUpdateQueryTest : TestContainersSetup() {
                     .optimistic()
             )
         }
-            .isInstanceOf(OptimisticLockException::class.java)
-            .hasMessage("Condition was not satisfied")
+        assertThat(exception.message).isEqualTo("Condition was not satisfied")
     }
 
     @Test
-    fun `should throw optimistic lock exception for delete`() {
+    fun `should throw optimistic lock exception for delete`() = runTest {
         // when / then
-        assertThatThrownBy {
+        val exception = assertThrows<OptimisticLockException>() {
             repo.execute(
                 deleteFrom("optimistic_update_query_test")
                     .where("id = ?", uuid(randomUUID()))
                     .optimistic()
             )
         }
-            .isInstanceOf(OptimisticLockException::class.java)
-            .hasMessage("Condition was not satisfied")
+        assertThat(exception.message).isEqualTo("Condition was not satisfied")
     }
 
     companion object {
@@ -49,7 +51,7 @@ class OptimisticUpdateQueryTest : TestContainersSetup() {
 
         @BeforeAll
         @JvmStatic
-        fun initSetup() {
+        fun initSetup() = runTest {
             repo = Repo(dataSource())
             repo.executePlain(
                 """

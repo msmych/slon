@@ -1,19 +1,24 @@
 package uk.matvey.slon.query.update
 
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import uk.matvey.slon.Repo
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.UuidParam.Companion.uuid
 import uk.matvey.slon.query.update.UpdateQuery.Builder.Companion.update
+import uk.matvey.slon.repo.Repo
+import uk.matvey.slon.repo.RepoKit.execute
+import uk.matvey.slon.repo.RepoKit.executePlain
+import uk.matvey.slon.repo.RepoKit.insertOne
+import uk.matvey.slon.repo.RepoKit.queryOne
 import java.util.UUID.randomUUID
 
 class UpdateQueryTest : TestContainersSetup() {
 
     @Test
-    fun `should update records`() {
+    fun `should update records`() = runTest {
         // given
         val id = randomUUID()
         val name = "name"
@@ -40,7 +45,7 @@ class UpdateQueryTest : TestContainersSetup() {
 
         @BeforeAll
         @JvmStatic
-        fun initSetup() {
+        fun initSetup() = runTest {
             repo = Repo(dataSource())
             repo.executePlain(
                 """

@@ -22,6 +22,7 @@ val assertjVersion: String by project
 val flywayVersion: String by project
 val hikariCpVersion: String by project
 val junitVersion: String by project
+val coroutinesVersion: String by project
 val kitVersion: String by project
 val kotlinLoggingJvmVersion: String by project
 val logbackClassicVersion: String by project
@@ -36,13 +37,12 @@ dependencies {
     implementation("uk.matvey:kit:$kitVersion")
 
     testFixturesImplementation(platform("org.junit:junit-bom:$junitVersion"))
-    testFixturesImplementation("org.junit.jupiter:junit-jupiter")
-    testFixturesImplementation("org.junit.platform:junit-platform-launcher")
+    testFixturesImplementation("org.junit.jupiter:junit-jupiter-api")
+    testFixturesRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     testFixturesImplementation(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
     testFixturesImplementation("org.testcontainers:postgresql")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
     testImplementation("org.assertj:assertj-core:$assertjVersion")
-    testApi(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
-    testApi("org.testcontainers:postgresql")
 }
 
 tasks.test {

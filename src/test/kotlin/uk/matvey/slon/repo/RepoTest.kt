@@ -1,10 +1,13 @@
-package uk.matvey.slon
+package uk.matvey.slon.repo
 
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import uk.matvey.slon.InsertBuilder.Companion.insertInto
+import uk.matvey.slon.RecordReader
+import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.exception.PgNotNullViolationException
 import uk.matvey.slon.exception.PgUniqueViolationException
 import uk.matvey.slon.param.ArrayParam.Companion.textArray
@@ -17,6 +20,10 @@ import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.param.UuidParam.Companion.uuid
 import uk.matvey.slon.query.update.DeleteQuery.Builder.Companion.deleteFrom
 import uk.matvey.slon.query.update.UpdateQuery.Builder.Companion.update
+import uk.matvey.slon.repo.RepoKit.execute
+import uk.matvey.slon.repo.RepoKit.insertOne
+import uk.matvey.slon.repo.RepoKit.query
+import uk.matvey.slon.repo.RepoKit.queryOne
 import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit.MILLIS
@@ -62,7 +69,7 @@ class RepoTest : TestContainersSetup() {
     }
 
     @Test
-    fun `should insert null values`() {
+    fun `should insert null values`() = runTest {
         listOf(
             "id",
             "age",
@@ -103,7 +110,7 @@ class RepoTest : TestContainersSetup() {
     }
 
     @Test
-    fun `should execute multiple commands`() {
+    fun `should execute multiple commands`() = runTest {
         // given
         val id1 = UUID.fromString("1ade41eb-7446-430f-9a2c-e45f7136dcf0")
         val id2 = UUID.fromString("9aca29a3-1a96-4807-b6f0-1c90d08b81a9")
@@ -150,7 +157,7 @@ class RepoTest : TestContainersSetup() {
     }
 
     @Test
-    fun `should support plain params`() {
+    fun `should support plain params`() = runTest {
         // given
         val name = randomUUID().toString()
 
@@ -174,34 +181,37 @@ class RepoTest : TestContainersSetup() {
     }
 
     @Test
-    fun `should read records updated within transaction`() {
+    fun `should read records updated within transaction`() = runTest {
         // given
         val name = randomUUID().toString()
 
         // when / then
         repo.access { a ->
             a.insertOne("repo_test", "id" to genRandomUuid(), "name" to text(name))
-            val record = a.queryOne("select * from repo_test where name = ?", listOf(text(name)), RepoTestRecord::from)
+            val record = a.queryOne(
+                "select * from repo_test where name = ?", listOf(text(name)),
+                RepoTestRecord::from
+            )
             assertThat(record.name).isEqualTo(name)
         }
     }
 
     @Test
-    fun `should throw not null violation exception`() {
+    fun `should throw not null violation exception`() = runTest {
         // when / then
-        assertThatThrownBy { repo.insertOne("repo_pk_test", "id" to uuid(null)) }
-            .isInstanceOf(PgNotNullViolationException::class.java)
+        assertThrows<PgNotNullViolationException> {
+            repo.insertOne("repo_pk_test", "id" to uuid(null))
+        }
     }
 
     @Test
-    fun `should throw unique violation exception`() {
+    fun `should throw unique violation exception`() = runTest {
         // given
         val id = randomUUID()
         repo.insertOne("repo_pk_test", "id" to uuid(id))
 
         // when / then
-        assertThatThrownBy { repo.insertOne("repo_pk_test", "id" to uuid(id)) }
-            .isInstanceOf(PgUniqueViolationException::class.java)
+        assertThrows<PgUniqueViolationException> { repo.insertOne("repo_pk_test", "id" to uuid(id)) }
     }
 
     companion object {
@@ -210,7 +220,7 @@ class RepoTest : TestContainersSetup() {
 
         @BeforeAll
         @JvmStatic
-        fun initSetup() {
+        fun initSetup() = runTest {
             repo = Repo(dataSource())
             repo.access { a ->
                 a.executePlain(

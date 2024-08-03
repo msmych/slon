@@ -25,7 +25,8 @@ object FlywayKit {
                 if (clean) {
                     this.clean()
                 }
-            }.migrate()
+            }
+            .migrate()
     }
 
     fun flywayConfig(

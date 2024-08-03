@@ -1,11 +1,11 @@
 package uk.matvey.slon.query.update
 
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import uk.matvey.slon.InsertBuilder.Companion.insertInto
 import uk.matvey.slon.RecordReader
-import uk.matvey.slon.Repo
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.param.PlainParam.Companion.genRandomUuid
 import uk.matvey.slon.param.PlainParam.Companion.now
@@ -13,6 +13,12 @@ import uk.matvey.slon.param.PlainParam.Companion.plainParam
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.param.UuidParam.Companion.uuid
+import uk.matvey.slon.repo.Repo
+import uk.matvey.slon.repo.RepoKit.execute
+import uk.matvey.slon.repo.RepoKit.insertOne
+import uk.matvey.slon.repo.RepoKit.query
+import uk.matvey.slon.repo.RepoKit.queryOne
+import uk.matvey.slon.repo.RepoKit.queryOneNullable
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit.MILLIS
@@ -39,7 +45,7 @@ class InsertQueryTest : TestContainersSetup() {
     }
 
     @Test
-    fun `should insert record`() {
+    fun `should insert record`() = runTest {
         // given
         val id = randomUUID()
         val name = randomUUID().toString()
@@ -65,7 +71,7 @@ class InsertQueryTest : TestContainersSetup() {
     }
 
     @Test
-    fun `should insert multiple records`() {
+    fun `should insert multiple records`() = runTest {
         // given
         val name = randomUUID().toString()
 
@@ -87,7 +93,7 @@ class InsertQueryTest : TestContainersSetup() {
     }
 
     @Test
-    fun `should support on conflict clause`() {
+    fun `should support on conflict clause`() = runTest {
         // given
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomUUID().toString()
@@ -119,7 +125,7 @@ class InsertQueryTest : TestContainersSetup() {
     }
 
     @Test
-    fun `should support on conflict do nothing`() {
+    fun `should support on conflict do nothing`() = runTest {
         // given
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomUUID().toString()
@@ -156,7 +162,7 @@ class InsertQueryTest : TestContainersSetup() {
 
         @BeforeAll
         @JvmStatic
-        fun initSetup() {
+        fun initSetup() = runTest {
             repo = Repo(dataSource())
             repo.access { a ->
                 a.executePlain(

@@ -1,5 +1,7 @@
-package uk.matvey.slon
+package uk.matvey.slon.access
 
+import uk.matvey.slon.InsertBuilder
+import uk.matvey.slon.RecordReader
 import uk.matvey.slon.param.Param
 import uk.matvey.slon.query.Query
 import uk.matvey.slon.query.RawQuery
