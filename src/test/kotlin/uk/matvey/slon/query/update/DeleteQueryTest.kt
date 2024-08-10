@@ -11,7 +11,7 @@ import uk.matvey.slon.query.update.DeleteQuery.Builder.Companion.deleteFrom
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.execute
 import uk.matvey.slon.repo.RepoKit.executePlain
-import uk.matvey.slon.repo.RepoKit.insertOne
+import uk.matvey.slon.repo.RepoKit.insertInto
 import uk.matvey.slon.repo.RepoKit.queryOneNullable
 import java.util.UUID.randomUUID
 
@@ -22,7 +22,12 @@ class DeleteQueryTest : TestContainersSetup() {
         // given
         val id = randomUUID()
 
-        repo.insertOne("delete_query_test", "id" to uuid(id), "name" to text(randomUUID().toString()))
+        repo.insertInto("delete_query_test") {
+            set(
+                "id" to uuid(id),
+                "name" to text(randomUUID().toString())
+            )
+        }
 
         // when
         repo.execute(deleteFrom("delete_query_test").where("id = ?", uuid(id)))

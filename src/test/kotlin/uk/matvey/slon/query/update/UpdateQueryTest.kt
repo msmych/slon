@@ -11,7 +11,7 @@ import uk.matvey.slon.query.update.UpdateQuery.Builder.Companion.update
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.execute
 import uk.matvey.slon.repo.RepoKit.executePlain
-import uk.matvey.slon.repo.RepoKit.insertOne
+import uk.matvey.slon.repo.RepoKit.insertInto
 import uk.matvey.slon.repo.RepoKit.queryOne
 import java.util.UUID.randomUUID
 
@@ -24,7 +24,12 @@ class UpdateQueryTest : TestContainersSetup() {
         val name = "name"
 
         val newName = randomUUID().toString()
-        repo.insertOne("update_query_test", "id" to uuid(id), "name" to text(name))
+        repo.insertInto("update_query_test") {
+            set(
+                "id" to uuid(id),
+                "name" to text(name)
+            )
+        }
 
         // when
         repo.execute(

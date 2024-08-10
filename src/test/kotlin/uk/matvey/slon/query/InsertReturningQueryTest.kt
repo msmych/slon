@@ -4,7 +4,6 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import uk.matvey.slon.InsertBuilder.Companion.insertInto
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.param.PlainParam.Companion.genRandomUuid
@@ -12,8 +11,8 @@ import uk.matvey.slon.param.PlainParam.Companion.now
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.repo.Repo
-import uk.matvey.slon.repo.RepoKit.execute
-import uk.matvey.slon.repo.RepoKit.insertOne
+import uk.matvey.slon.repo.RepoKit.insertInto
+import uk.matvey.slon.repo.RepoKit.insertReturningOneNullable
 import uk.matvey.slon.repo.RepoKit.queryOneNullable
 import java.time.Duration
 import java.time.Instant
@@ -38,11 +37,10 @@ class InsertReturningQueryTest : TestContainersSetup() {
     @Test
     fun `should insert returning`() = runTest {
         // when
-        val result = repo.execute(
-            insertInto("insert_returning_query_test")
-                .set("id" to genRandomUuid(), "created_at" to now())
-                .returningOneNullable(listOf("id")) { r -> r.uuid("id") }
-        )
+        val result = repo.insertReturningOneNullable("insert_returning_query_test") {
+            set("id" to genRandomUuid(), "created_at" to now())
+            returning(listOf("id")) { r -> r.uuid("id") }
+        }
 
         // then
         assertThat(result).isNotNull
@@ -51,11 +49,10 @@ class InsertReturningQueryTest : TestContainersSetup() {
     @Test
     fun `should insert returning all`() = runTest {
         // when
-        val result = repo.execute(
-            insertInto("insert_returning_query_test")
-                .set("id" to genRandomUuid(), "name" to text(randomUUID().toString()), "created_at" to now())
-                .returningOneNullable(InsertReturningQueryTestRecord::from)
-        )
+        val result = repo.insertReturningOneNullable("insert_returning_query_test") {
+            set("id" to genRandomUuid(), "name" to text(randomUUID().toString()), "created_at" to now())
+            returning(InsertReturningQueryTestRecord::from)
+        }
 
         // then
         assertThat(result).isNotNull
@@ -67,24 +64,23 @@ class InsertReturningQueryTest : TestContainersSetup() {
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomUUID().toString()
 
-        repo.insertOne(
-            "insert_returning_query_test",
-            "id" to genRandomUuid(),
-            "name" to text(name),
-            "created_at" to timestamp(createdAt)
-        )
+        repo.insertInto("insert_returning_query_test") {
+            set(
+                "id" to genRandomUuid(),
+                "name" to text(name),
+                "created_at" to timestamp(createdAt)
+            )
+        }
 
         // when
-        repo.execute(
-            insertInto("insert_returning_query_test")
-                .set(
-                    "id" to genRandomUuid(),
-                    "name" to text(name),
-                    "created_at" to timestamp(createdAt)
-                )
-                .onConflict(listOf("created_at"), "update set created_at = excluded.created_at + interval '1 hours'")
-                .build()
-        )
+        repo.insertInto("insert_returning_query_test") {
+            set(
+                "id" to genRandomUuid(),
+                "name" to text(name),
+                "created_at" to timestamp(createdAt)
+            )
+            onConflict(listOf("created_at"), "update set created_at = excluded.created_at + interval '1 hours'")
+        }
 
         // then
         val result = repo.queryOneNullable(
@@ -102,24 +98,23 @@ class InsertReturningQueryTest : TestContainersSetup() {
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomUUID().toString()
 
-        repo.insertOne(
-            "insert_returning_query_test",
-            "id" to genRandomUuid(),
-            "name" to text(name),
-            "created_at" to timestamp(createdAt)
-        )
+        repo.insertInto("insert_returning_query_test") {
+            set(
+                "id" to genRandomUuid(),
+                "name" to text(name),
+                "created_at" to timestamp(createdAt)
+            )
+        }
 
         // when
-        repo.execute(
-            insertInto("insert_returning_query_test")
-                .set(
-                    "id" to genRandomUuid(),
-                    "name" to text(name),
-                    "created_at" to timestamp(createdAt)
-                )
-                .onConflictDoNothing()
-                .build()
-        )
+        repo.insertInto("insert_returning_query_test") {
+            set(
+                "id" to genRandomUuid(),
+                "name" to text(name),
+                "created_at" to timestamp(createdAt)
+            )
+            onConflictDoNothing()
+        }
 
         // then
         val result = repo.queryOneNullable(
