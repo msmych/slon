@@ -2,6 +2,8 @@ package uk.matvey.slon.access
 
 import uk.matvey.slon.query.InsertQueryBuilder
 import uk.matvey.slon.query.InsertReturningQuery
+import uk.matvey.slon.query.UpdateQueryBuilder
+import uk.matvey.slon.query.update.UpdateQuery
 
 object AccessKit {
 
@@ -27,5 +29,10 @@ object AccessKit {
     ): T? {
         val builder = InsertQueryBuilder.insert(table)
         return execute(builder.query().oneNullable())
+    }
+
+    fun Access.update(table: String, query: UpdateQueryBuilder.() -> UpdateQuery) {
+        val builder = UpdateQueryBuilder.update(table)
+        execute(builder.query())
     }
 }

@@ -5,10 +5,13 @@ import uk.matvey.slon.access.AccessKit.insertInto
 import uk.matvey.slon.access.AccessKit.insertReturning
 import uk.matvey.slon.access.AccessKit.insertReturningOne
 import uk.matvey.slon.access.AccessKit.insertReturningOneNullable
+import uk.matvey.slon.access.AccessKit.update
 import uk.matvey.slon.param.Param
 import uk.matvey.slon.query.InsertQueryBuilder
 import uk.matvey.slon.query.InsertReturningQuery
 import uk.matvey.slon.query.Query
+import uk.matvey.slon.query.UpdateQueryBuilder
+import uk.matvey.slon.query.update.UpdateQuery
 
 object RepoKit {
 
@@ -42,6 +45,10 @@ object RepoKit {
 
     suspend fun <T> Repo.insertReturningOneNullable(table: String, query: InsertQueryBuilder.() -> InsertReturningQuery<T>): T? {
         return access { a -> a.insertReturningOneNullable(table, query) }
+    }
+
+    suspend fun Repo.update(table: String, query: UpdateQueryBuilder.() -> UpdateQuery) {
+        access { a -> a.update(table, query) }
     }
 
     suspend fun <T> Repo.queryOne(

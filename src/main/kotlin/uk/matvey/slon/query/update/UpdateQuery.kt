@@ -19,30 +19,4 @@ class UpdateQuery(
     }
 
     fun optimistic() = optimistic(this)
-
-    class Builder(
-        private val table: String,
-    ) {
-
-        private val values = mutableListOf<Pair<String, Param>>()
-
-        fun set(values: List<Pair<String, Param>>) = apply {
-            this.values += values
-        }
-
-        fun set(vararg values: Pair<String, Param>) = set(values.toList())
-
-        fun set(column: String, value: Param) = set(column to value)
-
-        fun where(condition: String, params: List<Param>): UpdateQuery {
-            return UpdateQuery(table, values, condition, params)
-        }
-
-        fun where(condition: String, vararg params: Param) = where(condition, params.toList())
-
-        companion object {
-
-            fun update(table: String) = Builder(table)
-        }
-    }
 }

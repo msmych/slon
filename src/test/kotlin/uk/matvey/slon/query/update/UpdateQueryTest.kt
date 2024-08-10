@@ -7,12 +7,11 @@ import org.junit.jupiter.api.Test
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.UuidParam.Companion.uuid
-import uk.matvey.slon.query.update.UpdateQuery.Builder.Companion.update
 import uk.matvey.slon.repo.Repo
-import uk.matvey.slon.repo.RepoKit.execute
 import uk.matvey.slon.repo.RepoKit.executePlain
 import uk.matvey.slon.repo.RepoKit.insertInto
 import uk.matvey.slon.repo.RepoKit.queryOne
+import uk.matvey.slon.repo.RepoKit.update
 import java.util.UUID.randomUUID
 
 class UpdateQueryTest : TestContainersSetup() {
@@ -32,11 +31,10 @@ class UpdateQueryTest : TestContainersSetup() {
         }
 
         // when
-        repo.execute(
-            update("update_query_test")
-                .set("name", text(newName))
-                .where("id = ?", uuid(id))
-        )
+        repo.update("update_query_test") {
+            set("name", text(newName))
+            where("id = ?", uuid(id))
+        }
 
         // then
         repo.queryOne("select * from update_query_test where id = ?", listOf(uuid(id))) { r ->

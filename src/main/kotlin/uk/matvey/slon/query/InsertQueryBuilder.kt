@@ -37,11 +37,11 @@ class InsertQueryBuilder(
     }
 
     fun onConflict(doClause: String) {
-        onConflict(listOf(), doClause)
+        this.onConflict(listOf(), doClause)
     }
 
     fun onConflictDoNothing() {
-        onConflict("nothing")
+        this.onConflict("nothing")
     }
 
     fun <T> returning(returning: List<String>, read: (RecordReader) -> T): InsertReturningQuery<T> {
@@ -49,7 +49,7 @@ class InsertQueryBuilder(
     }
 
     fun <T> returning(read: (RecordReader) -> T): InsertReturningQuery<T> {
-        return returning(listOf("*"), read)
+        return this.returning(listOf("*"), read)
     }
 
     fun build() = InsertQuery(table, columns, values, onConflict)
