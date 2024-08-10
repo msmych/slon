@@ -7,6 +7,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import uk.matvey.kit.random.RandomKit.randomAlphabetic
+import uk.matvey.kit.random.RandomKit.randomAlphanumeric
+import uk.matvey.kit.random.RandomKit.randomInt
+import uk.matvey.kit.random.RandomKit.randomLong
 import uk.matvey.slon.InsertBuilder.Companion.insertInto
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
@@ -34,15 +38,15 @@ import java.util.UUID.randomUUID
 
 class RepoTest : TestContainersSetup() {
 
-    private val name = "name"
-    private val age = 27
-    private val code = 9_999_999_999_999
+    private val name = randomAlphabetic()
+    private val age = randomInt(1..99)
+    private val code = randomLong(9_999_999_999_999)
     private val birthDate = LocalDate.now()
     private val createdAt = Instant.now().truncatedTo(MILLIS)
     private val details = buildJsonObject {
-        put("key", "value")
+        put(randomAlphanumeric(), randomAlphanumeric())
     }
-    private val tags = listOf("tag1", "tag2")
+    private val tags = listOf(randomAlphanumeric(), randomAlphanumeric())
 
     private data class RepoTestRecord(
         val id: UUID?,

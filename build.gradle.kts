@@ -32,6 +32,7 @@ val testcontainersVersion: String by project
 dependencies {
     api("com.zaxxer:HikariCP:$hikariCpVersion")
     api("org.flywaydb:flyway-core:$flywayVersion")
+    api("org.flywaydb:flyway-database-postgresql:$flywayVersion")
     api("org.postgresql:postgresql:$postgresqlVersion")
 
     implementation("uk.matvey:kit:$kitVersion")
