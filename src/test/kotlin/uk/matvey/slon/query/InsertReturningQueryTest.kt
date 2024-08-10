@@ -13,7 +13,7 @@ import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.execute
-import uk.matvey.slon.repo.RepoKit.insertOne
+import uk.matvey.slon.repo.RepoKit.insertInto
 import uk.matvey.slon.repo.RepoKit.queryOneNullable
 import java.time.Duration
 import java.time.Instant
@@ -67,12 +67,13 @@ class InsertReturningQueryTest : TestContainersSetup() {
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomUUID().toString()
 
-        repo.insertOne(
-            "insert_returning_query_test",
-            "id" to genRandomUuid(),
-            "name" to text(name),
-            "created_at" to timestamp(createdAt)
-        )
+        repo.insertInto("insert_returning_query_test") {
+            set(
+                "id" to genRandomUuid(),
+                "name" to text(name),
+                "created_at" to timestamp(createdAt)
+            )
+        }
 
         // when
         repo.execute(
@@ -102,12 +103,13 @@ class InsertReturningQueryTest : TestContainersSetup() {
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomUUID().toString()
 
-        repo.insertOne(
-            "insert_returning_query_test",
-            "id" to genRandomUuid(),
-            "name" to text(name),
-            "created_at" to timestamp(createdAt)
-        )
+        repo.insertInto("insert_returning_query_test") {
+            set(
+                "id" to genRandomUuid(),
+                "name" to text(name),
+                "created_at" to timestamp(createdAt)
+            )
+        }
 
         // when
         repo.execute(

@@ -1,6 +1,5 @@
 package uk.matvey.slon.access
 
-import uk.matvey.slon.InsertBuilder
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.param.Param
 import uk.matvey.slon.query.Query
@@ -22,10 +21,6 @@ class Access(private val connection: Connection) {
 
     fun executePlain(query: String) {
         execute(rawUpdate(query))
-    }
-
-    fun insertOne(into: String, vararg values: Pair<String, Param>) {
-        InsertBuilder.insertOne(into, *values).execute(connection)
     }
 
     fun <T> query(

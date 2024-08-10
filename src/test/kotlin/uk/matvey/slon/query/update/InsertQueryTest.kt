@@ -15,7 +15,7 @@ import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.param.UuidParam.Companion.uuid
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.execute
-import uk.matvey.slon.repo.RepoKit.insertOne
+import uk.matvey.slon.repo.RepoKit.insertInto
 import uk.matvey.slon.repo.RepoKit.query
 import uk.matvey.slon.repo.RepoKit.queryOne
 import uk.matvey.slon.repo.RepoKit.queryOneNullable
@@ -52,12 +52,13 @@ class InsertQueryTest : TestContainersSetup() {
         val createdAt = Instant.now().truncatedTo(MILLIS)
 
         // when / then
-        repo.insertOne(
-            "insert_query_test",
-            "id" to uuid(id),
-            "name" to text(name),
-            "created_at" to timestamp(createdAt),
-        )
+        repo.insertInto("insert_query_test") {
+            set(
+                "id" to uuid(id),
+                "name" to text(name),
+                "created_at" to timestamp(createdAt),
+            )
+        }
 
         val result = repo.queryOne(
             "select * from insert_query_test where id = ?",
@@ -98,12 +99,13 @@ class InsertQueryTest : TestContainersSetup() {
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomUUID().toString()
 
-        repo.insertOne(
-            "insert_query_test",
-            "id" to genRandomUuid(),
-            "name" to text(name),
-            "created_at" to timestamp(createdAt)
-        )
+        repo.insertInto("insert_query_test") {
+            set(
+                "id" to genRandomUuid(),
+                "name" to text(name),
+                "created_at" to timestamp(createdAt)
+            )
+        }
 
         // when
         repo.execute(
@@ -130,12 +132,13 @@ class InsertQueryTest : TestContainersSetup() {
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomUUID().toString()
 
-        repo.insertOne(
-            "insert_query_test",
-            "id" to genRandomUuid(),
-            "name" to text(name),
-            "created_at" to timestamp(createdAt)
-        )
+        repo.insertInto("insert_query_test") {
+            set(
+                "id" to genRandomUuid(),
+                "name" to text(name),
+                "created_at" to timestamp(createdAt)
+            )
+        }
 
         // when
         repo.execute(
