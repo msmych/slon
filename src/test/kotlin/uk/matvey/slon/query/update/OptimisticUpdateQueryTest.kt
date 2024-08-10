@@ -35,7 +35,7 @@ class OptimisticUpdateQueryTest : TestContainersSetup() {
     @Test
     fun `should throw optimistic lock exception for delete`() = runTest {
         // when / then
-        val exception = assertThrows<OptimisticLockException>() {
+        val exception = assertThrows<OptimisticLockException> {
             repo.execute(
                 deleteFrom("optimistic_update_query_test")
                     .where("id = ?", uuid(randomUUID()))

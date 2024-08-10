@@ -1,6 +1,8 @@
 package uk.matvey.slon.repo
 
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -37,7 +39,9 @@ class RepoTest : TestContainersSetup() {
     private val code = 9_999_999_999_999
     private val birthDate = LocalDate.now()
     private val createdAt = Instant.now().truncatedTo(MILLIS)
-    private val details = """{"key": "value"}"""
+    private val details = buildJsonObject {
+        put("key", "value")
+    }
     private val tags = listOf("tag1", "tag2")
 
     private data class RepoTestRecord(

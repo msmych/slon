@@ -1,6 +1,8 @@
 package uk.matvey.slon.param
 
+import kotlinx.serialization.json.JsonElement
 import org.postgresql.util.PGobject
+import uk.matvey.kit.json.JsonKit.jsonSerialize
 import java.sql.PreparedStatement
 import java.sql.Types
 
@@ -21,5 +23,7 @@ class JsonbParam(private val value: String?) : Param() {
     companion object {
 
         fun jsonb(value: String?) = JsonbParam(value)
+
+        fun jsonb(value: JsonElement?) = JsonbParam(value?.let { jsonSerialize(it) })
     }
 }

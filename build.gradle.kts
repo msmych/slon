@@ -36,11 +36,11 @@ dependencies {
 
     implementation("uk.matvey:kit:$kitVersion")
 
-    testFixturesImplementation(platform("org.junit:junit-bom:$junitVersion"))
-    testFixturesImplementation("org.junit.jupiter:junit-jupiter-api")
-    testFixturesRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     testFixturesImplementation(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
     testFixturesImplementation("org.testcontainers:postgresql")
+    testImplementation(platform("org.junit:junit-bom:$junitVersion"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
     testImplementation("org.assertj:assertj-core:$assertjVersion")
 }
@@ -50,8 +50,14 @@ tasks.test {
 }
 
 java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
     withJavadocJar()
     withSourcesJar()
+}
+
+kotlin {
+    jvmToolchain(21)
 }
 
 val slonVersion = project.findProperty("releaseVersion") as? String ?: "0.1.0-SNAPSHOT"
