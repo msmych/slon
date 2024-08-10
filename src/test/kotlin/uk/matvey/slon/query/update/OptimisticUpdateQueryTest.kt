@@ -9,8 +9,8 @@ import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.exception.OptimisticLockException
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.UuidParam.Companion.uuid
-import uk.matvey.slon.query.UpdateQueryBuilder
-import uk.matvey.slon.query.update.DeleteQuery.Builder.Companion.deleteFrom
+import uk.matvey.slon.query.update.DeleteQueryBuilder.Companion.deleteFrom
+import uk.matvey.slon.query.update.UpdateQueryBuilder.Companion.update
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.execute
 import uk.matvey.slon.repo.RepoKit.executePlain
@@ -23,7 +23,7 @@ class OptimisticUpdateQueryTest : TestContainersSetup() {
         // when / then
         val exception = assertThrows<OptimisticLockException> {
             repo.execute(
-                UpdateQueryBuilder("optimistic_update_query_test").apply {
+                update("optimistic_update_query_test").apply {
                     set("name", text("New Name"))
                 }
                     .where("id = ?", uuid(randomUUID()))

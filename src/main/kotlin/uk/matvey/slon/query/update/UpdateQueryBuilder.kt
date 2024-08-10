@@ -1,7 +1,6 @@
-package uk.matvey.slon.query
+package uk.matvey.slon.query.update
 
 import uk.matvey.slon.param.Param
-import uk.matvey.slon.query.update.UpdateQuery
 
 class UpdateQueryBuilder(
     private val table: String,

@@ -16,18 +16,4 @@ class DeleteQuery(
     }
 
     fun optimistic() = optimistic(this)
-
-    class Builder(private val table: String) {
-
-        fun where(condition: String, params: List<Param>): DeleteQuery {
-            return DeleteQuery(table, condition, params.toList())
-        }
-
-        fun where(condition: String, vararg params: Param) = where(condition, params.toList())
-
-        companion object {
-
-            fun deleteFrom(table: String) = Builder(table)
-        }
-    }
 }

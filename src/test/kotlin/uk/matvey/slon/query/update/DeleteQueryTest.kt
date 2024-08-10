@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.UuidParam.Companion.uuid
-import uk.matvey.slon.query.update.DeleteQuery.Builder.Companion.deleteFrom
+import uk.matvey.slon.query.update.DeleteQueryBuilder.Companion.deleteFrom
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.execute
 import uk.matvey.slon.repo.RepoKit.executePlain

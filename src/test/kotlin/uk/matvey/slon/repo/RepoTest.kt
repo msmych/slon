@@ -25,7 +25,7 @@ import uk.matvey.slon.param.PlainParam.Companion.genRandomUuid
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.param.UuidParam.Companion.uuid
-import uk.matvey.slon.query.update.DeleteQuery.Builder.Companion.deleteFrom
+import uk.matvey.slon.query.update.DeleteQueryBuilder.Companion.deleteFrom
 import uk.matvey.slon.repo.RepoKit.insertInto
 import uk.matvey.slon.repo.RepoKit.query
 import uk.matvey.slon.repo.RepoKit.queryOne

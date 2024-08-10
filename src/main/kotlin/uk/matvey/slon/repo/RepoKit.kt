@@ -10,8 +10,8 @@ import uk.matvey.slon.param.Param
 import uk.matvey.slon.query.InsertQueryBuilder
 import uk.matvey.slon.query.InsertReturningQuery
 import uk.matvey.slon.query.Query
-import uk.matvey.slon.query.UpdateQueryBuilder
 import uk.matvey.slon.query.update.UpdateQuery
+import uk.matvey.slon.query.update.UpdateQueryBuilder
 
 object RepoKit {
 
@@ -35,7 +35,10 @@ object RepoKit {
         access { a -> a.insertInto(table, query) }
     }
 
-    suspend fun <T> Repo.insertReturning(table: String, query: InsertQueryBuilder.() -> InsertReturningQuery<T>): List<T> {
+    suspend fun <T> Repo.insertReturning(
+        table: String,
+        query: InsertQueryBuilder.() -> InsertReturningQuery<T>
+    ): List<T> {
         return access { a -> a.insertReturning(table, query) }
     }
 
@@ -43,7 +46,10 @@ object RepoKit {
         return access { a -> a.insertReturningOne(table, query) }
     }
 
-    suspend fun <T> Repo.insertReturningOneNullable(table: String, query: InsertQueryBuilder.() -> InsertReturningQuery<T>): T? {
+    suspend fun <T> Repo.insertReturningOneNullable(
+        table: String,
+        query: InsertQueryBuilder.() -> InsertReturningQuery<T>
+    ): T? {
         return access { a -> a.insertReturningOneNullable(table, query) }
     }
 

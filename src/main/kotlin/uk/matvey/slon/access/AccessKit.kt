@@ -2,8 +2,8 @@ package uk.matvey.slon.access
 
 import uk.matvey.slon.query.InsertQueryBuilder
 import uk.matvey.slon.query.InsertReturningQuery
-import uk.matvey.slon.query.UpdateQueryBuilder
 import uk.matvey.slon.query.update.UpdateQuery
+import uk.matvey.slon.query.update.UpdateQueryBuilder
 
 object AccessKit {
 
