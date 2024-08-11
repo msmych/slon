@@ -16,18 +16,17 @@ import uk.matvey.slon.repo.RepoKit.execute
 import uk.matvey.slon.repo.RepoKit.executePlain
 import java.util.UUID.randomUUID
 
-class OptimisticUpdateQueryTest : TestContainersSetup() {
+class RequireSingleUpdateQueryTest : TestContainersSetup() {
 
     @Test
     fun `should throw optimistic lock exception for update`() = runTest {
         // when / then
         val exception = assertThrows<OptimisticLockException> {
             repo.execute(
-                update("optimistic_update_query_test").apply {
-                    set("name", text("New Name"))
-                }
+                update("optimistic_update_query_test")
+                    .set("name", text("New Name"))
                     .where("id = ?", uuid(randomUUID()))
-                    .optimistic()
+                    .requireSingleUpdate()
             )
         }
         assertThat(exception.message).isEqualTo("Condition was not satisfied")
@@ -40,7 +39,7 @@ class OptimisticUpdateQueryTest : TestContainersSetup() {
             repo.execute(
                 deleteFrom("optimistic_update_query_test")
                     .where("id = ?", uuid(randomUUID()))
-                    .optimistic()
+                    .requireSingleUpdate()
             )
         }
         assertThat(exception.message).isEqualTo("Condition was not satisfied")

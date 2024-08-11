@@ -7,9 +7,8 @@ import org.junit.jupiter.api.Test
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.UuidParam.Companion.uuid
-import uk.matvey.slon.query.update.DeleteQueryBuilder.Companion.deleteFrom
 import uk.matvey.slon.repo.Repo
-import uk.matvey.slon.repo.RepoKit.execute
+import uk.matvey.slon.repo.RepoKit.deleteFrom
 import uk.matvey.slon.repo.RepoKit.executePlain
 import uk.matvey.slon.repo.RepoKit.insertInto
 import uk.matvey.slon.repo.RepoKit.queryOneNullable
@@ -30,7 +29,7 @@ class DeleteQueryTest : TestContainersSetup() {
         }
 
         // when
-        repo.execute(deleteFrom("delete_query_test").where("id = ?", uuid(id)))
+        repo.deleteFrom("delete_query_test", "id = ?", uuid(id))
 
         // then
         val result = repo.queryOneNullable("select * from delete_query_test where id = ?", listOf(uuid(id))) {}

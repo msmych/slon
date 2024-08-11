@@ -3,7 +3,7 @@ package uk.matvey.slon.query.update
 import uk.matvey.slon.exception.OptimisticLockException
 import java.sql.Connection
 
-class OptimisticUpdateQuery(
+class RequireSingleUpdateQuery(
     private val update: Update,
 ) : Update {
 
@@ -17,8 +17,8 @@ class OptimisticUpdateQuery(
 
     companion object {
 
-        fun optimistic(update: Update): OptimisticUpdateQuery {
-            return OptimisticUpdateQuery(update)
+        fun requireSingleUpdate(update: Update): RequireSingleUpdateQuery {
+            return RequireSingleUpdateQuery(update)
         }
     }
 }

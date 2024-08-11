@@ -12,7 +12,7 @@ import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.insertInto
-import uk.matvey.slon.repo.RepoKit.insertReturningOneNullable
+import uk.matvey.slon.repo.RepoKit.insertReturning
 import uk.matvey.slon.repo.RepoKit.queryOneNullable
 import java.time.Duration
 import java.time.Instant
@@ -37,10 +37,10 @@ class InsertReturningQueryTest : TestContainersSetup() {
     @Test
     fun `should insert returning`() = runTest {
         // when
-        val result = repo.insertReturningOneNullable("insert_returning_query_test") {
+        val result = repo.insertReturning("insert_returning_query_test") {
             set("id" to genRandomUuid(), "created_at" to now())
             returning(listOf("id")) { r -> r.uuid("id") }
-        }
+        }.singleOrNull()
 
         // then
         assertThat(result).isNotNull
@@ -49,10 +49,10 @@ class InsertReturningQueryTest : TestContainersSetup() {
     @Test
     fun `should insert returning all`() = runTest {
         // when
-        val result = repo.insertReturningOneNullable("insert_returning_query_test") {
+        val result = repo.insertReturning("insert_returning_query_test") {
             set("id" to genRandomUuid(), "name" to text(randomUUID().toString()), "created_at" to now())
             returning(InsertReturningQueryTestRecord::from)
-        }
+        }.singleOrNull()
 
         // then
         assertThat(result).isNotNull

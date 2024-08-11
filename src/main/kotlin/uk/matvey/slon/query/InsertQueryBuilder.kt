@@ -7,42 +7,45 @@ import uk.matvey.slon.query.update.InsertQuery
 class InsertQueryBuilder(
     private val table: String,
 ) {
-    private lateinit var columns: List<String>
+    private val columns = mutableListOf<String>()
     private val values = mutableListOf<List<Param>>()
     private var onConflict: Pair<List<String>, String>? = null
 
-    fun columns(columns: List<String>) {
-        this.columns = columns
+    fun columns(columns: List<String>) = apply {
+        this.columns.clear()
+        this.columns += columns
     }
 
-    fun columns(vararg columns: String) {
+    fun columns(vararg columns: String) = apply {
         this.columns(columns.toList())
     }
 
-    fun values(values: List<List<Param>>) {
+    fun values(values: List<List<Param>>) = apply {
         this.values += values
     }
 
-    fun values(vararg values: Param) {
+    fun values(vararg values: Param) = apply {
         this.values(listOf(values.toList()))
     }
 
-    fun set(vararg values: Pair<String, Param>) {
+    fun set(vararg values: Pair<String, Param>) = apply {
         this.columns(values.map { it.first })
         this.values(listOf(values.map { it.second }))
     }
 
-    fun onConflict(columns: List<String>, doClause: String) {
+    fun onConflict(columns: List<String>, doClause: String) = apply {
         this.onConflict = columns to doClause
     }
 
-    fun onConflict(doClause: String) {
+    fun onConflict(doClause: String) = apply {
         this.onConflict(listOf(), doClause)
     }
 
-    fun onConflictDoNothing() {
+    fun onConflictDoNothing() = apply {
         this.onConflict("nothing")
     }
+
+    fun build() = InsertQuery(table, columns, values, onConflict)
 
     fun <T> returning(returning: List<String>, read: (RecordReader) -> T): InsertReturningQuery<T> {
         return InsertReturningQuery(table, columns, values, onConflict, returning, read)
@@ -52,11 +55,9 @@ class InsertQueryBuilder(
         return this.returning(listOf("*"), read)
     }
 
-    fun build() = InsertQuery(table, columns, values, onConflict)
-
     companion object {
 
-        fun insert(table: String): InsertQueryBuilder {
+        fun insertInto(table: String): InsertQueryBuilder {
             return InsertQueryBuilder(table)
         }
     }

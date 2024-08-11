@@ -1,7 +1,7 @@
 package uk.matvey.slon.query.update
 
 import uk.matvey.slon.param.Param
-import uk.matvey.slon.query.update.OptimisticUpdateQuery.Companion.optimistic
+import uk.matvey.slon.query.update.RequireSingleUpdateQuery.Companion.requireSingleUpdate
 import java.sql.Connection
 
 class UpdateQuery(
@@ -18,5 +18,5 @@ class UpdateQuery(
         return RawUpdateQuery(query, params).execute(connection)
     }
 
-    fun optimistic() = optimistic(this)
+    fun requireSingleUpdate() = requireSingleUpdate(this)
 }

@@ -13,6 +13,7 @@ import uk.matvey.kit.random.RandomKit.randomInt
 import uk.matvey.kit.random.RandomKit.randomLong
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
+import uk.matvey.slon.access.AccessKit.deleteFrom
 import uk.matvey.slon.access.AccessKit.insertInto
 import uk.matvey.slon.access.AccessKit.update
 import uk.matvey.slon.exception.PgNotNullViolationException
@@ -25,7 +26,6 @@ import uk.matvey.slon.param.PlainParam.Companion.genRandomUuid
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.param.UuidParam.Companion.uuid
-import uk.matvey.slon.query.update.DeleteQueryBuilder.Companion.deleteFrom
 import uk.matvey.slon.repo.RepoKit.insertInto
 import uk.matvey.slon.repo.RepoKit.query
 import uk.matvey.slon.repo.RepoKit.queryOne
@@ -143,10 +143,7 @@ class RepoTest : TestContainersSetup() {
                 set("name", text(newName))
                 where("id = ?", uuid(id1))
             }
-            a.execute(
-                deleteFrom("repo_test")
-                    .where("id = ?", uuid(id2))
-            )
+            a.deleteFrom("repo_test", "id = ?", uuid(id2))
         }
 
         // then

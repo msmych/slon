@@ -10,8 +10,16 @@ class UpdateQueryBuilder(
     private lateinit var condition: String
     private val conditionParams = mutableListOf<Param>()
 
-    fun set(column: String, value: Param) {
-        this.values += column to value
+    fun set(values: List<Pair<String, Param>>) = apply {
+        this.values += values
+    }
+
+    fun set(vararg values: Pair<String, Param>) = apply {
+        this.set(values.toList())
+    }
+
+    fun set(column: String, value: Param) = apply {
+        this.set(column to value)
     }
 
     fun where(condition: String, params: List<Param>): UpdateQuery {
