@@ -24,7 +24,7 @@ class UpdateQueryTest : TestContainersSetup() {
 
         val newName = randomUUID().toString()
         repo.insertInto("update_query_test") {
-            set(
+            values(
                 "id" to uuid(id),
                 "name" to text(name)
             )

@@ -93,7 +93,7 @@ class RepoTest : TestContainersSetup() {
 
             // when
             repo.insertInto("repo_test") {
-                set(
+                values(
                     "id" to uuid(id),
                     "age" to int(age.takeUnless { k == "age" }),
                     "code" to int(code.takeUnless { k == "code" }),
@@ -134,7 +134,7 @@ class RepoTest : TestContainersSetup() {
         // when
         repo.access { a ->
             a.insertInto("repo_test") {
-                set(
+                values(
                     "id" to uuid(id3),
                     "name" to text(name)
                 )
@@ -166,7 +166,7 @@ class RepoTest : TestContainersSetup() {
 
         // when
         repo.insertInto("repo_test") {
-            set(
+            values(
                 "id" to genRandomUuid(),
                 "age" to int(age),
                 "code" to int(code),
@@ -192,7 +192,7 @@ class RepoTest : TestContainersSetup() {
         // when / then
         repo.access { a ->
             a.insertInto("repo_test") {
-                set(
+                values(
                     "id" to genRandomUuid(),
                     "name" to text(name)
                 )
@@ -210,7 +210,7 @@ class RepoTest : TestContainersSetup() {
         // when / then
         assertThrows<PgNotNullViolationException> {
             repo.insertInto("repo_pk_test") {
-                set("id" to uuid(null))
+                values("id" to uuid(null))
             }
         }
     }
@@ -220,13 +220,13 @@ class RepoTest : TestContainersSetup() {
         // given
         val id = randomUUID()
         repo.insertInto("repo_pk_test") {
-            set("id" to uuid(id))
+            values("id" to uuid(id))
         }
 
         // when / then
         assertThrows<PgUniqueViolationException> {
             repo.insertInto("repo_pk_test") {
-                set("id" to uuid(id))
+                values("id" to uuid(id))
             }
         }
     }

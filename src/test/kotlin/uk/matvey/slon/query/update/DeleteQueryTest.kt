@@ -22,7 +22,7 @@ class DeleteQueryTest : TestContainersSetup() {
         val id = randomUUID()
 
         repo.insertInto("delete_query_test") {
-            set(
+            values(
                 "id" to uuid(id),
                 "name" to text(randomUUID().toString())
             )

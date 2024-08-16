@@ -14,6 +14,9 @@ class PlainParam(private val value: String) : Param() {
 
         fun plainParam(value: String) = PlainParam(value)
 
+        val currentDate = plainParam("current_date")
+        val currentTimestamp = plainParam("current_timestamp")
+
         fun genRandomUuid() = plainParam("gen_random_uuid()")
 
         fun now() = plainParam("now()")

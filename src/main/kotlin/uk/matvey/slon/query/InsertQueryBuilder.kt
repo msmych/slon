@@ -28,7 +28,7 @@ class InsertQueryBuilder(
         this.values(listOf(values.toList()))
     }
 
-    fun set(vararg values: Pair<String, Param>) = apply {
+    fun values(vararg values: Pair<String, Param>) = apply {
         this.columns(values.map { it.first })
         this.values(listOf(values.map { it.second }))
     }

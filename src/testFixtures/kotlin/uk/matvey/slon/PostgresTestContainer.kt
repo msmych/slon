@@ -1,7 +1,7 @@
 package uk.matvey.slon
 
 import org.testcontainers.containers.PostgreSQLContainer
-import uk.matvey.slon.DataSourceKit.hikariDataSource
+import uk.matvey.slon.HikariKit.hikariDataSource
 
 class PostgresTestContainer {
 

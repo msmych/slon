@@ -51,7 +51,7 @@ class InsertQueryTest : TestContainersSetup() {
 
         // when / then
         repo.insertInto("insert_query_test") {
-            set(
+            values(
                 "id" to uuid(id),
                 "name" to text(name),
                 "created_at" to timestamp(createdAt),
@@ -96,7 +96,7 @@ class InsertQueryTest : TestContainersSetup() {
         val name = randomUUID().toString()
 
         repo.insertInto("insert_query_test") {
-            set(
+            values(
                 "id" to genRandomUuid(),
                 "name" to text(name),
                 "created_at" to timestamp(createdAt)
@@ -105,7 +105,7 @@ class InsertQueryTest : TestContainersSetup() {
 
         // when
         repo.insertInto("insert_query_test") {
-            set(
+            values(
                 "id" to genRandomUuid(),
                 "name" to text(name),
                 "created_at" to timestamp(createdAt)
@@ -127,7 +127,7 @@ class InsertQueryTest : TestContainersSetup() {
         val name = randomUUID().toString()
 
         repo.insertInto("insert_query_test") {
-            set(
+            values(
                 "id" to genRandomUuid(),
                 "name" to text(name),
                 "created_at" to timestamp(createdAt)
@@ -136,7 +136,7 @@ class InsertQueryTest : TestContainersSetup() {
 
         // when
         repo.insertInto("insert_query_test") {
-            set(
+            values(
                 "id" to genRandomUuid(),
                 "name" to text(name),
                 "created_at" to timestamp(createdAt)

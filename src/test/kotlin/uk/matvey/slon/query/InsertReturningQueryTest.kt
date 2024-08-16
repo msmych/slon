@@ -38,7 +38,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
     fun `should insert returning`() = runTest {
         // when
         val result = repo.insertReturning("insert_returning_query_test") {
-            set("id" to genRandomUuid(), "created_at" to now())
+            values("id" to genRandomUuid(), "created_at" to now())
             returning(listOf("id")) { r -> r.uuid("id") }
         }.singleOrNull()
 
@@ -50,7 +50,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
     fun `should insert returning all`() = runTest {
         // when
         val result = repo.insertReturning("insert_returning_query_test") {
-            set("id" to genRandomUuid(), "name" to text(randomUUID().toString()), "created_at" to now())
+            values("id" to genRandomUuid(), "name" to text(randomUUID().toString()), "created_at" to now())
             returning(InsertReturningQueryTestRecord::from)
         }.singleOrNull()
 
@@ -65,7 +65,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
         val name = randomUUID().toString()
 
         repo.insertInto("insert_returning_query_test") {
-            set(
+            values(
                 "id" to genRandomUuid(),
                 "name" to text(name),
                 "created_at" to timestamp(createdAt)
@@ -74,7 +74,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
 
         // when
         repo.insertInto("insert_returning_query_test") {
-            set(
+            values(
                 "id" to genRandomUuid(),
                 "name" to text(name),
                 "created_at" to timestamp(createdAt)
@@ -99,7 +99,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
         val name = randomUUID().toString()
 
         repo.insertInto("insert_returning_query_test") {
-            set(
+            values(
                 "id" to genRandomUuid(),
                 "name" to text(name),
                 "created_at" to timestamp(createdAt)
@@ -108,7 +108,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
 
         // when
         repo.insertInto("insert_returning_query_test") {
-            set(
+            values(
                 "id" to genRandomUuid(),
                 "name" to text(name),
                 "created_at" to timestamp(createdAt)

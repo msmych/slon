@@ -8,18 +8,19 @@ object FlywayKit {
 
     fun flywayMigrate(
         dataSource: DataSource,
-        schema: String,
-        createSchema: Boolean = true,
+        schema: String? = null,
         location: String? = null,
         clean: Boolean = false,
+        config: FluentConfiguration.() -> Unit = {},
     ) {
         flywayConfig(
             dataSource = dataSource,
             schema = schema,
-            createSchema = createSchema,
             location = location,
-            cleanDisabled = !clean,
-        )
+        ) {
+            this.cleanDisabled(!clean)
+            config()
+        }
             .load()
             .apply {
                 if (clean) {
@@ -31,17 +32,21 @@ object FlywayKit {
 
     fun flywayConfig(
         dataSource: DataSource,
-        schema: String,
-        createSchema: Boolean = true,
+        schema: String? = null,
         location: String? = null,
-        cleanDisabled: Boolean = true,
+        config: FluentConfiguration.() -> Unit = {},
     ): FluentConfiguration {
         return Flyway.configure()
             .dataSource(dataSource)
-            .schemas(schema)
-            .defaultSchema(schema)
-            .createSchemas(createSchema)
-            .locations(location)
-            .cleanDisabled(cleanDisabled)
+            .apply {
+                schema?.let {
+                    schemas(it)
+                    defaultSchema(it)
+                }
+                location?.let {
+                    locations(it)
+                }
+                config()
+            }
     }
 }
