@@ -4,6 +4,7 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.UuidParam.Companion.uuid
@@ -11,7 +12,7 @@ import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.deleteFrom
 import uk.matvey.slon.repo.RepoKit.executePlain
 import uk.matvey.slon.repo.RepoKit.insertInto
-import uk.matvey.slon.repo.RepoKit.queryOneNullable
+import uk.matvey.slon.repo.RepoKit.queryOneOrNull
 import java.util.UUID.randomUUID
 
 class DeleteQueryTest : TestContainersSetup() {
@@ -24,7 +25,7 @@ class DeleteQueryTest : TestContainersSetup() {
         repo.insertInto("delete_query_test") {
             values(
                 "id" to uuid(id),
-                "name" to text(randomUUID().toString())
+                "name" to text(randomAlphabetic())
             )
         }
 
@@ -32,7 +33,7 @@ class DeleteQueryTest : TestContainersSetup() {
         repo.deleteFrom("delete_query_test", "id = ?", uuid(id))
 
         // then
-        val result = repo.queryOneNullable("select * from delete_query_test where id = ?", listOf(uuid(id))) {}
+        val result = repo.queryOneOrNull("select * from delete_query_test where id = ?", listOf(uuid(id))) {}
         assertThat(result).isNull()
     }
 

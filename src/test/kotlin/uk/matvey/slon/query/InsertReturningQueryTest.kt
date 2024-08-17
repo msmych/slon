@@ -4,6 +4,7 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.param.PlainParam.Companion.genRandomUuid
@@ -12,13 +13,13 @@ import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.insertInto
+import uk.matvey.slon.repo.RepoKit.insertOneReturning
 import uk.matvey.slon.repo.RepoKit.insertReturning
-import uk.matvey.slon.repo.RepoKit.queryOneNullable
+import uk.matvey.slon.repo.RepoKit.queryOneOrNull
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit.MILLIS
 import java.util.UUID
-import java.util.UUID.randomUUID
 
 class InsertReturningQueryTest : TestContainersSetup() {
 
@@ -36,33 +37,29 @@ class InsertReturningQueryTest : TestContainersSetup() {
 
     @Test
     fun `should insert returning`() = runTest {
-        // when
-        val result = repo.insertReturning("insert_returning_query_test") {
+        // when / then
+        repo.insertOneReturning("insert_returning_query_test") {
             values("id" to genRandomUuid(), "created_at" to now())
-            returning(listOf("id")) { r -> r.uuid("id") }
-        }.singleOrNull()
-
-        // then
-        assertThat(result).isNotNull
+            returning<Unit>(listOf("id")) { r ->
+                assertThat(r.uuidOrNull("id")).isNotNull()
+            }
+        }
     }
 
     @Test
     fun `should insert returning all`() = runTest {
-        // when
-        val result = repo.insertReturning("insert_returning_query_test") {
-            values("id" to genRandomUuid(), "name" to text(randomUUID().toString()), "created_at" to now())
+        // when / then
+        repo.insertReturning("insert_returning_query_test") {
+            values("id" to genRandomUuid(), "name" to text(randomAlphabetic()), "created_at" to now())
             returning(InsertReturningQueryTestRecord::from)
-        }.singleOrNull()
-
-        // then
-        assertThat(result).isNotNull
+        }
     }
 
     @Test
     fun `should support on conflict clause`() = runTest {
         // given
         val createdAt = Instant.now().truncatedTo(MILLIS)
-        val name = randomUUID().toString()
+        val name = randomAlphabetic()
 
         repo.insertInto("insert_returning_query_test") {
             values(
@@ -83,7 +80,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
         }
 
         // then
-        val result = repo.queryOneNullable(
+        val result = repo.queryOneOrNull(
             "select * from insert_returning_query_test where name = ?",
             listOf(text(name))
         ) { r ->
@@ -96,7 +93,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
     fun `should support on conflict do nothing`() = runTest {
         // given
         val createdAt = Instant.now().truncatedTo(MILLIS)
-        val name = randomUUID().toString()
+        val name = randomAlphabetic()
 
         repo.insertInto("insert_returning_query_test") {
             values(
@@ -117,7 +114,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
         }
 
         // then
-        val result = repo.queryOneNullable(
+        val result = repo.queryOneOrNull(
             "select * from insert_returning_query_test where name = ?",
             listOf(text(name))
         ) { r ->

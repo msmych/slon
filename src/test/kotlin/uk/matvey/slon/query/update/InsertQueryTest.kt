@@ -4,6 +4,7 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.param.PlainParam.Companion.genRandomUuid
@@ -16,7 +17,7 @@ import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.insertInto
 import uk.matvey.slon.repo.RepoKit.query
 import uk.matvey.slon.repo.RepoKit.queryOne
-import uk.matvey.slon.repo.RepoKit.queryOneNullable
+import uk.matvey.slon.repo.RepoKit.queryOneOrNull
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit.MILLIS
@@ -46,7 +47,7 @@ class InsertQueryTest : TestContainersSetup() {
     fun `should insert record`() = runTest {
         // given
         val id = randomUUID()
-        val name = randomUUID().toString()
+        val name = randomAlphabetic()
         val createdAt = Instant.now().truncatedTo(MILLIS)
 
         // when / then
@@ -72,7 +73,7 @@ class InsertQueryTest : TestContainersSetup() {
     @Test
     fun `should insert multiple records`() = runTest {
         // given
-        val name = randomUUID().toString()
+        val name = randomAlphabetic()
 
         // when
         repo.insertInto("insert_query_test") {
@@ -93,7 +94,7 @@ class InsertQueryTest : TestContainersSetup() {
     fun `should support on conflict clause`() = runTest {
         // given
         val createdAt = Instant.now().truncatedTo(MILLIS)
-        val name = randomUUID().toString()
+        val name = randomAlphabetic()
 
         repo.insertInto("insert_query_test") {
             values(
@@ -114,7 +115,7 @@ class InsertQueryTest : TestContainersSetup() {
         }
 
         // then
-        val result = repo.queryOneNullable("select * from insert_query_test where name = ?", listOf(text(name))) { r ->
+        val result = repo.queryOneOrNull("select * from insert_query_test where name = ?", listOf(text(name))) { r ->
             assertThat(r.instant("created_at")).isEqualTo(createdAt.plus(Duration.ofHours(1)))
         }
         assertThat(result).isNotNull
@@ -124,7 +125,7 @@ class InsertQueryTest : TestContainersSetup() {
     fun `should support on conflict do nothing`() = runTest {
         // given
         val createdAt = Instant.now().truncatedTo(MILLIS)
-        val name = randomUUID().toString()
+        val name = randomAlphabetic()
 
         repo.insertInto("insert_query_test") {
             values(
@@ -145,7 +146,7 @@ class InsertQueryTest : TestContainersSetup() {
         }
 
         // then
-        val result = repo.queryOneNullable("select * from insert_query_test where name = ?", listOf(text(name))) { r ->
+        val result = repo.queryOneOrNull("select * from insert_query_test where name = ?", listOf(text(name))) { r ->
             assertThat(r.instant("created_at")).isEqualTo(createdAt)
         }
         assertThat(result).isNotNull

@@ -3,6 +3,7 @@ package uk.matvey.slon.repo
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.access.AccessKit.deleteFrom
 import uk.matvey.slon.access.AccessKit.insertInto
+import uk.matvey.slon.access.AccessKit.insertOneReturning
 import uk.matvey.slon.access.AccessKit.insertReturning
 import uk.matvey.slon.access.AccessKit.update
 import uk.matvey.slon.param.Param
@@ -41,6 +42,13 @@ object RepoKit {
         return access { a -> a.insertReturning(table, query) }
     }
 
+    suspend fun <T> Repo.insertOneReturning(
+        table: String,
+        query: InsertQueryBuilder.() -> InsertReturningQuery<T>
+    ): T {
+        return access { a -> a.insertOneReturning(table, query) }
+    }
+
     suspend fun Repo.update(table: String, query: UpdateQueryBuilder.() -> UpdateQuery): Int {
         return access { a -> a.update(table, query) }
     }
@@ -53,12 +61,12 @@ object RepoKit {
         return access { a -> a.queryOne(query, params, reader) }
     }
 
-    suspend fun <T> Repo.queryOneNullable(
+    suspend fun <T> Repo.queryOneOrNull(
         query: String,
         params: List<Param> = listOf(),
         reader: (RecordReader) -> T
     ): T? {
-        return access { a -> a.queryOneNullable(query, params, reader) }
+        return access { a -> a.queryOneOrNull(query, params, reader) }
     }
 
     suspend fun Repo.deleteFrom(table: String, where: String, params: List<Param>): Int {

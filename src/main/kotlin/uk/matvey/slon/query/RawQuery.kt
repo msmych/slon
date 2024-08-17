@@ -30,7 +30,14 @@ class RawQuery<T>(
         return OneQuery(this)
     }
 
-    fun oneNullable(): OneNullableQuery<T> {
-        return OneNullableQuery(this)
+    fun oneOrNull(): OneOrNullQuery<T> {
+        return OneOrNullQuery(this)
+    }
+
+    companion object {
+
+        fun <T> rawQuery(query: String, params: List<Param>, read: (RecordReader) -> T): RawQuery<T> {
+            return RawQuery(query, params, read)
+        }
     }
 }

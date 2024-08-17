@@ -5,71 +5,71 @@ import java.util.UUID
 
 class RecordReader(private val resultSet: ResultSet) {
 
-    fun nullableRaw(name: String) = resultSet.getObject(name)?.nullable()
+    fun rawOrNull(name: String) = resultSet.getObject(name)?.orNull()
 
-    fun nullableRaw(index: Int) = resultSet.getObject(index)?.nullable()
+    fun rawOrNull(index: Int) = resultSet.getObject(index)?.orNull()
 
-    fun raw(name: String) = requireNotNull(nullableRaw(name))
+    fun raw(name: String) = requireNotNull(rawOrNull(name))
 
-    fun raw(index: Int) = requireNotNull(nullableRaw(index))
+    fun raw(index: Int) = requireNotNull(rawOrNull(index))
 
-    fun nullableString(name: String) = resultSet.getString(name)?.nullable()
+    fun stringOrNull(name: String) = resultSet.getString(name)?.orNull()
 
-    fun nullableString(index: Int) = resultSet.getString(index)?.nullable()
+    fun stringOrNull(index: Int) = resultSet.getString(index)?.orNull()
 
-    fun string(name: String) = requireNotNull(nullableString(name))
+    fun string(name: String) = requireNotNull(stringOrNull(name))
 
-    fun string(index: Int) = requireNotNull(nullableString(index))
+    fun string(index: Int) = requireNotNull(stringOrNull(index))
 
-    fun nullableInt(name: String) = resultSet.getInt(name).nullable()
+    fun intOrNull(name: String) = resultSet.getInt(name).orNull()
 
-    fun nullableInt(index: Int) = resultSet.getInt(index).nullable()
+    fun intOrNull(index: Int) = resultSet.getInt(index).orNull()
 
-    fun int(name: String) = requireNotNull(nullableInt(name))
+    fun int(name: String) = requireNotNull(intOrNull(name))
 
-    fun int(index: Int) = requireNotNull(nullableInt(index))
+    fun int(index: Int) = requireNotNull(intOrNull(index))
 
-    fun nullableLong(name: String) = resultSet.getLong(name).nullable()
+    fun longOrNull(name: String) = resultSet.getLong(name).orNull()
 
-    fun nullableLong(index: Int) = resultSet.getLong(index).nullable()
+    fun longOrNull(index: Int) = resultSet.getLong(index).orNull()
 
-    fun long(name: String) = requireNotNull(nullableLong(name))
+    fun long(name: String) = requireNotNull(longOrNull(name))
 
-    fun long(index: Int) = requireNotNull(nullableLong(index))
+    fun long(index: Int) = requireNotNull(longOrNull(index))
 
-    fun nullableUuid(name: String) = nullableRaw(name) as UUID?
+    fun uuidOrNull(name: String) = rawOrNull(name) as UUID?
 
-    fun nullableUuid(index: Int) = nullableRaw(index) as UUID?
+    fun uuidOrNull(index: Int) = rawOrNull(index) as UUID?
 
-    fun uuid(name: String) = requireNotNull(nullableUuid(name))
+    fun uuid(name: String) = requireNotNull(uuidOrNull(name))
 
-    fun uuid(index: Int) = requireNotNull(nullableUuid(index))
+    fun uuid(index: Int) = requireNotNull(uuidOrNull(index))
 
-    fun nullableInstant(name: String) = resultSet.getTimestamp(name)?.nullable()?.toInstant()
+    fun instantOrNull(name: String) = resultSet.getTimestamp(name)?.orNull()?.toInstant()
 
-    fun nullableInstant(index: Int) = resultSet.getTimestamp(index)?.nullable()?.toInstant()
+    fun instantOrNull(index: Int) = resultSet.getTimestamp(index)?.orNull()?.toInstant()
 
-    fun instant(name: String) = requireNotNull(nullableInstant(name))
+    fun instant(name: String) = requireNotNull(instantOrNull(name))
 
-    fun instant(index: Int) = requireNotNull(nullableInstant(index))
+    fun instant(index: Int) = requireNotNull(instantOrNull(index))
 
-    fun nullableLocalDate(name: String) = resultSet.getDate(name)?.nullable()?.toLocalDate()
+    fun localDateOrNull(name: String) = resultSet.getDate(name)?.orNull()?.toLocalDate()
 
-    fun nullableLocalDate(index: Int) = resultSet.getDate(index)?.nullable()?.toLocalDate()
+    fun localDateOrNull(index: Int) = resultSet.getDate(index)?.orNull()?.toLocalDate()
 
-    fun localDate(name: String) = requireNotNull(nullableLocalDate(name))
+    fun localDate(name: String) = requireNotNull(localDateOrNull(name))
 
-    fun localDate(index: Int) = requireNotNull(nullableLocalDate(index))
-
-    @Suppress("UNCHECKED_CAST")
-    fun nullableStringList(name: String) = (resultSet.getArray(name)?.nullable()?.array as Array<String>?)?.toList()
+    fun localDate(index: Int) = requireNotNull(localDateOrNull(index))
 
     @Suppress("UNCHECKED_CAST")
-    fun nullableStringList(index: Int) = (resultSet.getArray(index)?.nullable()?.array as Array<String>?)?.toList()
+    fun stringListOrNull(name: String) = (resultSet.getArray(name)?.orNull()?.array as Array<String>?)?.toList()
 
-    fun stringList(name: String) = requireNotNull(nullableStringList(name))
+    @Suppress("UNCHECKED_CAST")
+    fun stringListOrNull(index: Int) = (resultSet.getArray(index)?.orNull()?.array as Array<String>?)?.toList()
 
-    fun stringList(index: Int) = requireNotNull(nullableStringList(index))
+    fun stringList(name: String) = requireNotNull(stringListOrNull(name))
 
-    private fun <T> T?.nullable() = this?.takeIf { !resultSet.wasNull() }
+    fun stringList(index: Int) = requireNotNull(stringListOrNull(index))
+
+    private fun <T> T?.orNull() = this?.takeIf { !resultSet.wasNull() }
 }

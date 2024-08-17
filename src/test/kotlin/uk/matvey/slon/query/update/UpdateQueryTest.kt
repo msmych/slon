@@ -4,6 +4,7 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.UuidParam.Companion.uuid
@@ -22,7 +23,7 @@ class UpdateQueryTest : TestContainersSetup() {
         val id = randomUUID()
         val name = "name"
 
-        val newName = randomUUID().toString()
+        val newName = randomAlphabetic()
         repo.insertInto("update_query_test") {
             values(
                 "id" to uuid(id),

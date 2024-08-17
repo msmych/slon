@@ -62,14 +62,14 @@ class RepoTest : TestContainersSetup() {
 
             fun from(reader: RecordReader): RepoTestRecord {
                 return RepoTestRecord(
-                    reader.nullableUuid("id"),
-                    reader.nullableInt("age"),
-                    reader.nullableLong("code"),
-                    reader.nullableString("name"),
-                    reader.nullableLocalDate("birth_date"),
-                    reader.nullableInstant("created_at"),
-                    reader.nullableString("details"),
-                    reader.nullableStringList("tags"),
+                    reader.uuidOrNull("id"),
+                    reader.intOrNull("age"),
+                    reader.longOrNull("code"),
+                    reader.stringOrNull("name"),
+                    reader.localDateOrNull("birth_date"),
+                    reader.instantOrNull("created_at"),
+                    reader.stringOrNull("details"),
+                    reader.stringListOrNull("tags"),
                 )
             }
         }
@@ -89,7 +89,7 @@ class RepoTest : TestContainersSetup() {
         ).forEach { k ->
             // given
             val id = randomUUID().takeUnless { k == "id" }
-            val name = randomUUID().toString()
+            val name = randomAlphabetic()
 
             // when
             repo.insertInto("repo_test") {
@@ -112,7 +112,7 @@ class RepoTest : TestContainersSetup() {
                 "id = ?" to uuid(id)
             }
             repo.queryOne("select * from repo_test where $condition", listOf(conditionParam)) { r ->
-                assertThat(r.nullableRaw(k)).isNull()
+                assertThat(r.rawOrNull(k)).isNull()
             }
         }
     }
@@ -123,7 +123,7 @@ class RepoTest : TestContainersSetup() {
         val id1 = UUID.fromString("1ade41eb-7446-430f-9a2c-e45f7136dcf0")
         val id2 = UUID.fromString("9aca29a3-1a96-4807-b6f0-1c90d08b81a9")
         val id3 = UUID.fromString("d5ffb4cd-583b-4423-b25b-af8882aa057e")
-        val newName = randomUUID().toString()
+        val newName = randomAlphabetic()
 
         repo.insertInto("repo_test") {
             columns("id", "name")
@@ -162,7 +162,7 @@ class RepoTest : TestContainersSetup() {
     @Test
     fun `should support plain params`() = runTest {
         // given
-        val name = randomUUID().toString()
+        val name = randomAlphabetic()
 
         // when
         repo.insertInto("repo_test") {
@@ -187,7 +187,7 @@ class RepoTest : TestContainersSetup() {
     @Test
     fun `should read records updated within transaction`() = runTest {
         // given
-        val name = randomUUID().toString()
+        val name = randomAlphabetic()
 
         // when / then
         repo.access { a ->

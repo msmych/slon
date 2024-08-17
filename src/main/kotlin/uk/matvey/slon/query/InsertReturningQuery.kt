@@ -2,6 +2,7 @@ package uk.matvey.slon.query
 
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.param.Param
+import uk.matvey.slon.query.RawQuery.Companion.rawQuery
 import java.sql.Connection
 
 class InsertReturningQuery<T>(
@@ -25,18 +26,16 @@ class InsertReturningQuery<T>(
                 ?: ""
             " on conflict" + conflictColumns + " do $v"
         } ?: ""
-        val query = "insert into $table $columns values $values" +
-            onConflictClause +
-            " returning $returning"
+        val query = "insert into $table $columns values $values" + onConflictClause + " returning $returning"
         val params = this.values.flatten()
-        return RawQuery(query, params, read).execute(connection)
+        return rawQuery(query, params, read).execute(connection)
     }
 
     fun one(): OneQuery<T> {
         return OneQuery(this)
     }
 
-    fun oneNullable(): OneNullableQuery<T> {
-        return OneNullableQuery(this)
+    fun oneOrNull(): OneOrNullQuery<T> {
+        return OneOrNullQuery(this)
     }
 }

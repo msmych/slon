@@ -3,7 +3,7 @@ package uk.matvey.slon.access
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.param.Param
 import uk.matvey.slon.query.Query
-import uk.matvey.slon.query.RawQuery
+import uk.matvey.slon.query.RawQuery.Companion.rawQuery
 import uk.matvey.slon.query.update.RawUpdateQuery.Companion.rawUpdate
 import java.sql.Connection
 import java.sql.Connection.TRANSACTION_READ_COMMITTED
@@ -28,15 +28,15 @@ class Access(private val connection: Connection) {
         params: List<Param> = listOf(),
         read: (RecordReader) -> T
     ): List<T> {
-        return execute(RawQuery(query, params, read))
+        return execute(rawQuery(query, params, read))
     }
 
-    fun <T> queryOneNullable(
+    fun <T> queryOneOrNull(
         query: String,
         params: List<Param> = listOf(),
         read: (RecordReader) -> T
     ): T? {
-        return execute(RawQuery(query, params, read).oneNullable())
+        return execute(rawQuery(query, params, read).oneOrNull())
     }
 
     fun <T> queryOne(
@@ -44,6 +44,6 @@ class Access(private val connection: Connection) {
         params: List<Param> = listOf(),
         read: (RecordReader) -> T
     ): T {
-        return execute(RawQuery(query, params, read).one())
+        return execute(rawQuery(query, params, read).one())
     }
 }
