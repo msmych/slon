@@ -208,11 +208,13 @@ class RepoTest : TestContainersSetup() {
     @Test
     fun `should throw not null violation exception`() = runTest {
         // when / then
-        assertThrows<PgNotNullViolationException> {
+        val e = assertThrows<PgNotNullViolationException> {
             repo.insertInto("repo_pk_test") {
                 values("id" to uuid(null))
             }
         }
+        assertThat(e.table).isEqualTo("repo_pk_test")
+        assertThat(e.column).isEqualTo("id")
     }
 
     @Test
