@@ -13,7 +13,7 @@ import uk.matvey.slon.param.TextParam.Companion.text
 import uk.matvey.slon.param.TimestampParam.Companion.timestamp
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.insertInto
-import uk.matvey.slon.repo.RepoKit.insertOneReturning
+import uk.matvey.slon.repo.RepoKit.insertReturningOne
 import uk.matvey.slon.repo.RepoKit.insertReturning
 import uk.matvey.slon.repo.RepoKit.queryOneOrNull
 import java.time.Duration
@@ -38,7 +38,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
     @Test
     fun `should insert returning`() = runTest {
         // when / then
-        repo.insertOneReturning("insert_returning_query_test") {
+        repo.insertReturningOne("insert_returning_query_test") {
             values("id" to genRandomUuid(), "created_at" to now())
             returning<Unit>(listOf("id")) { r ->
                 assertThat(r.uuidOrNull("id")).isNotNull()

@@ -20,9 +20,17 @@ object AccessKit {
         return execute(builder.query())
     }
 
-    fun <T> Access.insertOneReturning(table: String, query: InsertQueryBuilder.() -> InsertReturningQuery<T>): T {
+    fun <T> Access.insertReturningOne(table: String, query: InsertQueryBuilder.() -> InsertReturningQuery<T>): T {
         val builder = InsertQueryBuilder.insertInto(table)
         return execute(builder.query().one())
+    }
+
+    fun <T> Access.insertReturningOneOrNull(
+        table: String,
+        query: InsertQueryBuilder.() -> InsertReturningQuery<T>
+    ): T? {
+        val builder = InsertQueryBuilder.insertInto(table)
+        return execute(builder.query().oneOrNull())
     }
 
     fun Access.update(table: String, query: UpdateQueryBuilder.() -> UpdateQuery): Int {

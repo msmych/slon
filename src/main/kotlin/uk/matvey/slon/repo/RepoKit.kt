@@ -3,8 +3,9 @@ package uk.matvey.slon.repo
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.access.AccessKit.deleteFrom
 import uk.matvey.slon.access.AccessKit.insertInto
-import uk.matvey.slon.access.AccessKit.insertOneReturning
+import uk.matvey.slon.access.AccessKit.insertReturningOne
 import uk.matvey.slon.access.AccessKit.insertReturning
+import uk.matvey.slon.access.AccessKit.insertReturningOneOrNull
 import uk.matvey.slon.access.AccessKit.update
 import uk.matvey.slon.param.Param
 import uk.matvey.slon.query.InsertQueryBuilder
@@ -42,11 +43,18 @@ object RepoKit {
         return access { a -> a.insertReturning(table, query) }
     }
 
-    suspend fun <T> Repo.insertOneReturning(
+    suspend fun <T> Repo.insertReturningOne(
         table: String,
         query: InsertQueryBuilder.() -> InsertReturningQuery<T>
     ): T {
-        return access { a -> a.insertOneReturning(table, query) }
+        return access { a -> a.insertReturningOne(table, query) }
+    }
+
+    suspend fun <T> Repo.insertReturningOneOrNull(
+        table: String,
+        query: InsertQueryBuilder.() -> InsertReturningQuery<T>
+    ): T? {
+        return access { a -> a.insertReturningOneOrNull(table, query) }
     }
 
     suspend fun Repo.update(table: String, query: UpdateQueryBuilder.() -> UpdateQuery): Int {

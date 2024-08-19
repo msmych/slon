@@ -53,6 +53,14 @@ class RecordReader(private val resultSet: ResultSet) {
 
     fun instant(index: Int) = requireNotNull(instantOrNull(index))
 
+    fun localDateTimeOrNull(name: String) = resultSet.getTimestamp(name)?.orNull()?.toLocalDateTime()
+
+    fun localDateTimeOrNull(index: Int) = resultSet.getTimestamp(index)?.orNull()?.toLocalDateTime()
+
+    fun localDateTime(name: String) = requireNotNull(localDateTimeOrNull(name))
+
+    fun localDateTime(index: Int) = requireNotNull(localDateOrNull(index))
+
     fun localDateOrNull(name: String) = resultSet.getDate(name)?.orNull()?.toLocalDate()
 
     fun localDateOrNull(index: Int) = resultSet.getDate(index)?.orNull()?.toLocalDate()
