@@ -25,7 +25,7 @@ class Repo(
                 throw when (e) {
                     is PSQLException -> when (e.sqlState) {
                         NOT_NULL_VIOLATION.state -> PgNotNullViolationException.from(e)
-                        UNIQUE_VIOLATION.state -> PgUniqueViolationException(e)
+                        UNIQUE_VIOLATION.state -> PgUniqueViolationException.from(e)
                         else -> e
                     }
                     else -> e

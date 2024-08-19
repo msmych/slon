@@ -10,12 +10,8 @@ class PgNotNullViolationException(
 
     companion object {
         fun from(e: PSQLException): PgNotNullViolationException {
-            val table = e.message
-                ?.substringAfter("of relation \"", missingDelimiterValue = "?")
-                ?.substringBefore("\"")
-            val column = e.message
-                ?.substringAfter("null value in column \"", missingDelimiterValue = "?")
-                ?.substringBefore("\"")
+            val table = e.serverErrorMessage?.table
+            val column = e.serverErrorMessage?.column
             return PgNotNullViolationException(table, column, e)
         }
     }

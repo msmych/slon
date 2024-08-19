@@ -11,6 +11,7 @@ import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.kit.random.RandomKit.randomAlphanumeric
 import uk.matvey.kit.random.RandomKit.randomInt
 import uk.matvey.kit.random.RandomKit.randomLong
+import uk.matvey.kit.string.StringKit.toUuid
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.access.AccessKit.deleteFrom
@@ -120,9 +121,9 @@ class RepoTest : TestContainersSetup() {
     @Test
     fun `should execute multiple commands`() = runTest {
         // given
-        val id1 = UUID.fromString("1ade41eb-7446-430f-9a2c-e45f7136dcf0")
-        val id2 = UUID.fromString("9aca29a3-1a96-4807-b6f0-1c90d08b81a9")
-        val id3 = UUID.fromString("d5ffb4cd-583b-4423-b25b-af8882aa057e")
+        val id1 = "1ade41eb-7446-430f-9a2c-e45f7136dcf0".toUuid()
+        val id2 = "9aca29a3-1a96-4807-b6f0-1c90d08b81a9".toUuid()
+        val id3 = "d5ffb4cd-583b-4423-b25b-af8882aa057e".toUuid()
         val newName = randomAlphabetic()
 
         repo.insertInto("repo_test") {
@@ -226,11 +227,12 @@ class RepoTest : TestContainersSetup() {
         }
 
         // when / then
-        assertThrows<PgUniqueViolationException> {
+        val e = assertThrows<PgUniqueViolationException> {
             repo.insertInto("repo_pk_test") {
                 values("id" to uuid(id))
             }
         }
+        assertThat(e.constraint).isEqualTo("repo_pk_test_pkey")
     }
 
     companion object {
