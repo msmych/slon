@@ -1,14 +1,14 @@
 package uk.matvey.slon.query
 
 import uk.matvey.slon.RecordReader
-import uk.matvey.slon.param.Param
+import uk.matvey.slon.value.PgValue
 import uk.matvey.slon.query.RawQuery.Companion.rawQuery
 import java.sql.Connection
 
 class InsertReturningQuery<T>(
     private val table: String,
     private val columns: List<String>,
-    private val values: List<List<Param>>,
+    private val values: List<List<PgValue>>,
     private val onConflict: Pair<List<String>, String>?,
     private val returning: List<String>,
     private val read: (RecordReader) -> T,
@@ -17,7 +17,7 @@ class InsertReturningQuery<T>(
     override fun execute(connection: Connection): List<T> {
         val columns = columns.joinToString(prefix = "(", postfix = ")")
         val values = values.joinToString { vs ->
-            vs.joinToString(prefix = "(", postfix = ")", transform = Param::stringValue)
+            vs.joinToString(prefix = "(", postfix = ")", transform = PgValue::placeholder)
         }
         val returning = returning.joinToString()
         val onConflictClause = onConflict?.let { (k, v) ->

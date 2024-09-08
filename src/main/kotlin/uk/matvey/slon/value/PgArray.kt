@@ -1,12 +1,12 @@
-package uk.matvey.slon.param
+package uk.matvey.slon.value
 
 import java.sql.PreparedStatement
 import java.sql.Types
 
-class ArrayParam(
+class PgArray(
     private val type: String,
     private val value: Collection<*>?
-) : Param() {
+) : PgValue() {
 
     override fun setValue(statement: PreparedStatement, index: Int): Int {
         if (value == null) {
@@ -19,6 +19,7 @@ class ArrayParam(
     }
 
     companion object {
-        fun textArray(value: Collection<String>?) = ArrayParam("text", value)
+
+        fun Collection<String>?.toPgArray() = PgArray("text", this)
     }
 }

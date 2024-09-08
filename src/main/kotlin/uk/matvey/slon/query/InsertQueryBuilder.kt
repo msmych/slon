@@ -1,14 +1,14 @@
 package uk.matvey.slon.query
 
 import uk.matvey.slon.RecordReader
-import uk.matvey.slon.param.Param
+import uk.matvey.slon.value.PgValue
 import uk.matvey.slon.query.update.InsertQuery
 
 class InsertQueryBuilder(
     private val table: String,
 ) {
     private val columns = mutableListOf<String>()
-    private val values = mutableListOf<List<Param>>()
+    private val values = mutableListOf<List<PgValue>>()
     private var onConflict: Pair<List<String>, String>? = null
 
     fun columns(columns: List<String>) = apply {
@@ -20,15 +20,15 @@ class InsertQueryBuilder(
         this.columns(columns.toList())
     }
 
-    fun values(values: List<List<Param>>) = apply {
+    fun values(values: List<List<PgValue>>) = apply {
         this.values += values
     }
 
-    fun values(vararg values: Param) = apply {
+    fun values(vararg values: PgValue) = apply {
         this.values(listOf(values.toList()))
     }
 
-    fun values(vararg values: Pair<String, Param>) = apply {
+    fun values(vararg values: Pair<String, PgValue>) = apply {
         this.columns(values.map { it.first })
         this.values(listOf(values.map { it.second }))
     }

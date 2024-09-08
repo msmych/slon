@@ -7,14 +7,14 @@ import org.junit.jupiter.api.Test
 import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
-import uk.matvey.slon.param.PlainParam.Companion.genRandomUuid
-import uk.matvey.slon.param.PlainParam.Companion.now
-import uk.matvey.slon.param.TextParam.Companion.text
-import uk.matvey.slon.param.TimestampParam.Companion.timestamp
+import uk.matvey.slon.value.Pg
+import uk.matvey.slon.value.Pg.Companion.genRandomUuid
+import uk.matvey.slon.value.PgText.Companion.toPgText
+import uk.matvey.slon.value.PgTimestamp.Companion.toPgTimestamp
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.insertInto
-import uk.matvey.slon.repo.RepoKit.insertReturningOne
 import uk.matvey.slon.repo.RepoKit.insertReturning
+import uk.matvey.slon.repo.RepoKit.insertReturningOne
 import uk.matvey.slon.repo.RepoKit.queryOneOrNull
 import java.time.Duration
 import java.time.Instant
@@ -39,7 +39,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
     fun `should insert returning`() = runTest {
         // when / then
         repo.insertReturningOne("insert_returning_query_test") {
-            values("id" to genRandomUuid(), "created_at" to now())
+            values("id" to genRandomUuid(), "created_at" to Pg.now())
             returning<Unit>(listOf("id")) { r ->
                 assertThat(r.uuidOrNull("id")).isNotNull()
             }
@@ -50,7 +50,11 @@ class InsertReturningQueryTest : TestContainersSetup() {
     fun `should insert returning all`() = runTest {
         // when / then
         repo.insertReturning("insert_returning_query_test") {
-            values("id" to genRandomUuid(), "name" to text(randomAlphabetic()), "created_at" to now())
+            values(
+                "id" to genRandomUuid(),
+                "name" to randomAlphabetic().toPgText(),
+                "created_at" to Pg.now(),
+            )
             returning(InsertReturningQueryTestRecord::from)
         }
     }
@@ -64,8 +68,8 @@ class InsertReturningQueryTest : TestContainersSetup() {
         repo.insertInto("insert_returning_query_test") {
             values(
                 "id" to genRandomUuid(),
-                "name" to text(name),
-                "created_at" to timestamp(createdAt)
+                "name" to name.toPgText(),
+                "created_at" to createdAt.toPgTimestamp(),
             )
         }
 
@@ -73,8 +77,8 @@ class InsertReturningQueryTest : TestContainersSetup() {
         repo.insertInto("insert_returning_query_test") {
             values(
                 "id" to genRandomUuid(),
-                "name" to text(name),
-                "created_at" to timestamp(createdAt)
+                "name" to name.toPgText(),
+                "created_at" to createdAt.toPgTimestamp(),
             )
             onConflict(listOf("created_at"), "update set created_at = excluded.created_at + interval '1 hours'")
         }
@@ -82,7 +86,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
         // then
         val result = repo.queryOneOrNull(
             "select * from insert_returning_query_test where name = ?",
-            listOf(text(name))
+            listOf(name.toPgText())
         ) { r ->
             assertThat(r.instant("created_at")).isEqualTo(createdAt.plus(Duration.ofHours(1)))
         }
@@ -98,8 +102,8 @@ class InsertReturningQueryTest : TestContainersSetup() {
         repo.insertInto("insert_returning_query_test") {
             values(
                 "id" to genRandomUuid(),
-                "name" to text(name),
-                "created_at" to timestamp(createdAt)
+                "name" to name.toPgText(),
+                "created_at" to createdAt.toPgTimestamp(),
             )
         }
 
@@ -107,8 +111,8 @@ class InsertReturningQueryTest : TestContainersSetup() {
         repo.insertInto("insert_returning_query_test") {
             values(
                 "id" to genRandomUuid(),
-                "name" to text(name),
-                "created_at" to timestamp(createdAt)
+                "name" to name.toPgText(),
+                "created_at" to createdAt.toPgTimestamp(),
             )
             onConflictDoNothing()
         }
@@ -116,7 +120,7 @@ class InsertReturningQueryTest : TestContainersSetup() {
         // then
         val result = repo.queryOneOrNull(
             "select * from insert_returning_query_test where name = ?",
-            listOf(text(name))
+            listOf(name.toPgText())
         ) { r ->
             assertThat(r.instant("created_at")).isEqualTo(createdAt)
         }

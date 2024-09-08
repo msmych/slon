@@ -1,10 +1,10 @@
-package uk.matvey.slon.param
+package uk.matvey.slon.value
 
 import java.sql.PreparedStatement
 
-sealed class Param {
+sealed class PgValue {
 
-    open val stringValue = "?"
+    open val placeholder = "?"
 
     abstract fun setValue(statement: PreparedStatement, index: Int): Int
 }

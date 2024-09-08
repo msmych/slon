@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.exception.OptimisticLockException
-import uk.matvey.slon.param.TextParam.Companion.text
-import uk.matvey.slon.param.UuidParam.Companion.uuid
+import uk.matvey.slon.value.PgText.Companion.toPgText
+import uk.matvey.slon.value.PgUuid.Companion.toPgUuid
 import uk.matvey.slon.query.update.DeleteQueryBuilder.Companion.deleteFrom
 import uk.matvey.slon.query.update.UpdateQueryBuilder.Companion.update
 import uk.matvey.slon.repo.Repo
@@ -24,8 +24,8 @@ class RequireSingleUpdateQueryTest : TestContainersSetup() {
         val exception = assertThrows<OptimisticLockException> {
             repo.execute(
                 update("optimistic_update_query_test")
-                    .set("name", text("New Name"))
-                    .where("id = ?", uuid(randomUUID()))
+                    .set("name", "New Name".toPgText())
+                    .where("id = ?", randomUUID().toPgUuid())
                     .requireSingleUpdate()
             )
         }
@@ -38,7 +38,7 @@ class RequireSingleUpdateQueryTest : TestContainersSetup() {
         val exception = assertThrows<OptimisticLockException> {
             repo.execute(
                 deleteFrom("optimistic_update_query_test")
-                    .where("id = ?", uuid(randomUUID()))
+                    .where("id = ?", randomUUID().toPgUuid())
                     .requireSingleUpdate()
             )
         }

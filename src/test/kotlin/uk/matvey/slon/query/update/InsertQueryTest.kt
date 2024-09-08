@@ -7,12 +7,11 @@ import org.junit.jupiter.api.Test
 import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
-import uk.matvey.slon.param.PlainParam.Companion.genRandomUuid
-import uk.matvey.slon.param.PlainParam.Companion.now
-import uk.matvey.slon.param.PlainParam.Companion.plainParam
-import uk.matvey.slon.param.TextParam.Companion.text
-import uk.matvey.slon.param.TimestampParam.Companion.timestamp
-import uk.matvey.slon.param.UuidParam.Companion.uuid
+import uk.matvey.slon.value.Pg
+import uk.matvey.slon.value.Pg.Companion.genRandomUuid
+import uk.matvey.slon.value.PgText.Companion.toPgText
+import uk.matvey.slon.value.PgTimestamp.Companion.toPgTimestamp
+import uk.matvey.slon.value.PgUuid.Companion.toPgUuid
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.insertInto
 import uk.matvey.slon.repo.RepoKit.query
@@ -53,15 +52,15 @@ class InsertQueryTest : TestContainersSetup() {
         // when / then
         repo.insertInto("insert_query_test") {
             values(
-                "id" to uuid(id),
-                "name" to text(name),
-                "created_at" to timestamp(createdAt),
+                "id" to id.toPgUuid(),
+                "name" to name.toPgText(),
+                "created_at" to createdAt.toPgTimestamp(),
             )
         }
 
         val result = repo.queryOne(
             "select * from insert_query_test where id = ?",
-            listOf(uuid(id)),
+            listOf(id.toPgUuid()),
             InsertQueryTestRecord::from
         )
 
@@ -78,13 +77,13 @@ class InsertQueryTest : TestContainersSetup() {
         // when
         repo.insertInto("insert_query_test") {
             columns("id", "name", "created_at")
-            values(uuid(randomUUID()), text(name), now())
-            values(uuid(randomUUID()), text(name), plainParam("now() + interval '1 hours'"))
-            values(uuid(randomUUID()), text(name), plainParam("now() + interval '2 hours'"))
+            values(randomUUID().toPgUuid(), name.toPgText(), Pg.now())
+            values(randomUUID().toPgUuid(), name.toPgText(), Pg.plain("now() + interval '1 hours'"))
+            values(randomUUID().toPgUuid(), name.toPgText(), Pg.plain("now() + interval '2 hours'"))
         }
 
         // then
-        val result = repo.query("select * from insert_query_test where name = ?", listOf(text(name))) { r ->
+        val result = repo.query("select * from insert_query_test where name = ?", listOf(name.toPgText())) { r ->
             assertThat(r.string("name")).isEqualTo(name)
         }
         assertThat(result).hasSize(3)
@@ -99,8 +98,8 @@ class InsertQueryTest : TestContainersSetup() {
         repo.insertInto("insert_query_test") {
             values(
                 "id" to genRandomUuid(),
-                "name" to text(name),
-                "created_at" to timestamp(createdAt)
+                "name" to name.toPgText(),
+                "created_at" to createdAt.toPgTimestamp(),
             )
         }
 
@@ -108,16 +107,17 @@ class InsertQueryTest : TestContainersSetup() {
         repo.insertInto("insert_query_test") {
             values(
                 "id" to genRandomUuid(),
-                "name" to text(name),
-                "created_at" to timestamp(createdAt)
+                "name" to name.toPgText(),
+                "created_at" to createdAt.toPgTimestamp(),
             )
             onConflict(listOf("created_at"), "update set created_at = excluded.created_at + interval '1 hours'")
         }
 
         // then
-        val result = repo.queryOneOrNull("select * from insert_query_test where name = ?", listOf(text(name))) { r ->
-            assertThat(r.instant("created_at")).isEqualTo(createdAt.plus(Duration.ofHours(1)))
-        }
+        val result =
+            repo.queryOneOrNull("select * from insert_query_test where name = ?", listOf(name.toPgText())) { r ->
+                assertThat(r.instant("created_at")).isEqualTo(createdAt.plus(Duration.ofHours(1)))
+            }
         assertThat(result).isNotNull
     }
 
@@ -130,8 +130,8 @@ class InsertQueryTest : TestContainersSetup() {
         repo.insertInto("insert_query_test") {
             values(
                 "id" to genRandomUuid(),
-                "name" to text(name),
-                "created_at" to timestamp(createdAt)
+                "name" to name.toPgText(),
+                "created_at" to createdAt.toPgTimestamp(),
             )
         }
 
@@ -139,16 +139,17 @@ class InsertQueryTest : TestContainersSetup() {
         repo.insertInto("insert_query_test") {
             values(
                 "id" to genRandomUuid(),
-                "name" to text(name),
-                "created_at" to timestamp(createdAt)
+                "name" to name.toPgText(),
+                "created_at" to createdAt.toPgTimestamp(),
             )
             onConflictDoNothing()
         }
 
         // then
-        val result = repo.queryOneOrNull("select * from insert_query_test where name = ?", listOf(text(name))) { r ->
-            assertThat(r.instant("created_at")).isEqualTo(createdAt)
-        }
+        val result =
+            repo.queryOneOrNull("select * from insert_query_test where name = ?", listOf(name.toPgText())) { r ->
+                assertThat(r.instant("created_at")).isEqualTo(createdAt)
+            }
         assertThat(result).isNotNull
     }
 

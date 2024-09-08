@@ -1,6 +1,6 @@
 package uk.matvey.slon.access
 
-import uk.matvey.slon.param.Param
+import uk.matvey.slon.value.PgValue
 import uk.matvey.slon.query.InsertQueryBuilder
 import uk.matvey.slon.query.InsertReturningQuery
 import uk.matvey.slon.query.update.DeleteQueryBuilder
@@ -38,11 +38,11 @@ object AccessKit {
         return execute(builder.query())
     }
 
-    fun Access.deleteFrom(table: String, where: String, params: List<Param>): Int {
+    fun Access.deleteFrom(table: String, where: String, params: List<PgValue>): Int {
         return execute(DeleteQueryBuilder.deleteFrom(table).where(where, params))
     }
 
-    fun Access.deleteFrom(table: String, where: String, vararg params: Param): Int {
+    fun Access.deleteFrom(table: String, where: String, vararg params: PgValue): Int {
         return this.deleteFrom(table, where, params.toList())
     }
 }

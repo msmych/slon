@@ -1,4 +1,4 @@
-package uk.matvey.slon.param
+package uk.matvey.slon.value
 
 import java.sql.PreparedStatement
 import java.sql.Timestamp
@@ -6,7 +6,7 @@ import java.sql.Types
 import java.time.Instant
 import java.time.LocalDateTime
 
-class TimestampParam(private val value: Timestamp?) : Param() {
+class PgTimestamp(private val value: Timestamp?) : PgValue() {
 
     override fun setValue(statement: PreparedStatement, index: Int): Int {
         if (value == null) {
@@ -18,8 +18,9 @@ class TimestampParam(private val value: Timestamp?) : Param() {
     }
 
     companion object {
-        fun timestamp(value: Instant?) = TimestampParam(value?.let(Timestamp::from))
 
-        fun timestamp(value: LocalDateTime?) = TimestampParam(value?.let(Timestamp::valueOf))
+        fun Instant?.toPgTimestamp() = PgTimestamp(this?.let(Timestamp::from))
+
+        fun LocalDateTime?.toPgTimestamp() = PgTimestamp(this?.let(Timestamp::valueOf))
     }
 }

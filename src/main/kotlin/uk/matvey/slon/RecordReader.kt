@@ -21,6 +21,14 @@ class RecordReader(private val resultSet: ResultSet) {
 
     fun string(index: Int) = requireNotNull(stringOrNull(index))
 
+    inline fun <reified T : Enum<T>> enumOrNull(name: String) = stringOrNull(name)?.let { enumValueOf<T>(it) }
+
+    inline fun <reified T : Enum<T>> enumOrNull(index: Int) = stringOrNull(index)?.let { enumValueOf<T>(it) }
+
+    inline fun <reified T : Enum<T>> enum(name: String) = enumValueOf<T>(string(name))
+
+    inline fun <reified T : Enum<T>> enum(index: Int) = enumValueOf<T>(string(index))
+
     fun intOrNull(name: String) = resultSet.getInt(name).orNull()
 
     fun intOrNull(index: Int) = resultSet.getInt(index).orNull()

@@ -1,4 +1,4 @@
-package uk.matvey.slon
+package uk.matvey.slon.hikari
 
 import com.zaxxer.hikari.HikariDataSource
 

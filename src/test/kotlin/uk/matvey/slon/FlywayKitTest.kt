@@ -3,7 +3,7 @@ package uk.matvey.slon
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.matvey.slon.FlywayKit.flywayMigrate
+import uk.matvey.slon.flyway.FlywayKit.flywayMigrate
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.queryOne
 
