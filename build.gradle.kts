@@ -75,6 +75,8 @@ publishing {
             from(components["java"])
 
             pom {
+                groupId = "uk.matvey"
+                artifactId = "slon"
                 name = "Slon"
                 description = "Lightweight Kotlin library to work with Postgres"
                 url = "https://github.com/msmych/slon"
@@ -117,9 +119,9 @@ publishing {
     }
 }
 
-tasks.withType<AbstractPublishToMaven>().configureEach {
-    dependsOn("sourcesJar", "javadocJar", "testFixturesJar")
-}
+//tasks.withType<AbstractPublishToMaven>().configureEach {
+//    dependsOn("sourcesJar", "javadocJar", "testFixturesJar")
+//}
 
 //jreleaser {
 //    signing {
