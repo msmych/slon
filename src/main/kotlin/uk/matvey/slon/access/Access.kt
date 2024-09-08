@@ -1,7 +1,7 @@
 package uk.matvey.slon.access
 
 import uk.matvey.slon.RecordReader
-import uk.matvey.slon.param.Param
+import uk.matvey.slon.value.PgValue
 import uk.matvey.slon.query.Query
 import uk.matvey.slon.query.RawQuery.Companion.rawQuery
 import uk.matvey.slon.query.update.RawUpdateQuery.Companion.rawUpdate
@@ -25,7 +25,7 @@ class Access(private val connection: Connection) {
 
     fun <T> query(
         query: String,
-        params: List<Param> = listOf(),
+        params: List<PgValue> = listOf(),
         read: (RecordReader) -> T
     ): List<T> {
         return execute(rawQuery(query, params, read))
@@ -33,7 +33,7 @@ class Access(private val connection: Connection) {
 
     fun <T> queryOneOrNull(
         query: String,
-        params: List<Param> = listOf(),
+        params: List<PgValue> = listOf(),
         read: (RecordReader) -> T
     ): T? {
         return execute(rawQuery(query, params, read).oneOrNull())
@@ -41,7 +41,7 @@ class Access(private val connection: Connection) {
 
     fun <T> queryOne(
         query: String,
-        params: List<Param> = listOf(),
+        params: List<PgValue> = listOf(),
         read: (RecordReader) -> T
     ): T {
         return execute(rawQuery(query, params, read).one())

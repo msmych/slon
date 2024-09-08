@@ -6,8 +6,8 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.TestContainersSetup
-import uk.matvey.slon.param.TextParam.Companion.text
-import uk.matvey.slon.param.UuidParam.Companion.uuid
+import uk.matvey.slon.value.PgText.Companion.toPgText
+import uk.matvey.slon.value.PgUuid.Companion.toPgUuid
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.executePlain
 import uk.matvey.slon.repo.RepoKit.insertInto
@@ -26,19 +26,19 @@ class UpdateQueryTest : TestContainersSetup() {
         val newName = randomAlphabetic()
         repo.insertInto("update_query_test") {
             values(
-                "id" to uuid(id),
-                "name" to text(name)
+                "id" to id.toPgUuid(),
+                "name" to name.toPgText(),
             )
         }
 
         // when
         repo.update("update_query_test") {
-            set("name", text(newName))
-            where("id = ?", uuid(id))
+            set("name", newName.toPgText())
+            where("id = ?", id.toPgUuid())
         }
 
         // then
-        repo.queryOne("select * from update_query_test where id = ?", listOf(uuid(id))) { r ->
+        repo.queryOne("select * from update_query_test where id = ?", listOf(id.toPgUuid())) { r ->
             assertThat(r.string("name")).isEqualTo(newName)
         }
     }

@@ -1,21 +1,21 @@
 package uk.matvey.slon.query.update
 
-import uk.matvey.slon.param.Param
+import uk.matvey.slon.value.PgValue
 
 class DeleteQueryBuilder(
     private val table: String,
 ) {
 
     private lateinit var condition: String
-    private val conditionParams = mutableListOf<Param>()
+    private val conditionParams = mutableListOf<PgValue>()
 
-    fun where(condition: String, params: List<Param>): DeleteQuery {
+    fun where(condition: String, params: List<PgValue>): DeleteQuery {
         this.condition = condition
         this.conditionParams += params
         return DeleteQuery(table, condition, conditionParams)
     }
 
-    fun where(condition: String, vararg params: Param): DeleteQuery {
+    fun where(condition: String, vararg params: PgValue): DeleteQuery {
         return this.where(condition, params.toList())
     }
 

@@ -1,12 +1,13 @@
-package uk.matvey.slon.param
+package uk.matvey.slon.value
 
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonElement
 import org.postgresql.util.PGobject
-import uk.matvey.kit.json.JsonKit.jsonSerialize
+import uk.matvey.kit.json.JsonKit.JSON
 import java.sql.PreparedStatement
 import java.sql.Types
 
-class JsonbParam(private val value: String?) : Param() {
+class PgJsonb(private val value: String?) : PgValue() {
 
     override fun setValue(statement: PreparedStatement, index: Int): Int {
         if (value == null) {
@@ -22,8 +23,8 @@ class JsonbParam(private val value: String?) : Param() {
 
     companion object {
 
-        fun jsonb(value: String?) = JsonbParam(value)
+        fun JsonElement?.toPgJsonb() = PgJsonb(this?.let(JSON::encodeToString))
 
-        fun jsonb(value: JsonElement?) = JsonbParam(value?.let { jsonSerialize(it) })
+        fun String?.toPgJsonb() = this?.let(JSON::parseToJsonElement).toPgJsonb()
     }
 }

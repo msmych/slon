@@ -1,21 +1,23 @@
-package uk.matvey.slon.param
+package uk.matvey.slon.value
 
 import java.sql.PreparedStatement
 import java.sql.Types
 
-class UuidParam(private val value: java.util.UUID?) : Param() {
+class PgText(private val value: String?) : PgValue() {
 
     override fun setValue(statement: PreparedStatement, index: Int): Int {
         if (value == null) {
             statement.setNull(index, Types.NULL)
         } else {
-            statement.setObject(index, value)
+            statement.setString(index, value)
         }
         return index + 1
     }
 
     companion object {
 
-        fun uuid(value: java.util.UUID?) = UuidParam(value)
+        fun String?.toPgText() = PgText(this)
+
+        fun <T : Enum<T>> Enum<T>?.toPgText() = this?.name.toPgText()
     }
 }

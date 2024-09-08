@@ -1,9 +1,10 @@
-name: Build Check
+name: Build check
 
 on:
   push:
     branches:
       - '*'
+      - '!main'
 
 jobs:
   build:
@@ -23,7 +24,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v3.4.2
 
       - name: Build
-        run: |
-          ./gradlew check
+        run: ./gradlew check
         env:
           GH_PACKAGES_RO_TOKEN: ${{ secrets.GH_PACKAGES_RO_TOKEN }}

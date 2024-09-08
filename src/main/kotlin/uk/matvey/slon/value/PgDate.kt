@@ -1,11 +1,11 @@
-package uk.matvey.slon.param
+package uk.matvey.slon.value
 
 import java.sql.Date
 import java.sql.PreparedStatement
 import java.sql.Types.NULL
 import java.time.LocalDate
 
-class DateParam(private val value: Date?) : Param() {
+class PgDate(private val value: Date?) : PgValue() {
 
     override fun setValue(statement: PreparedStatement, index: Int): Int {
         if (value == null) {
@@ -17,6 +17,7 @@ class DateParam(private val value: Date?) : Param() {
     }
 
     companion object {
-        fun date(value: LocalDate?) = DateParam(value?.let(Date::valueOf))
+
+        fun LocalDate?.toPgDate() = PgDate(this?.let(Date::valueOf))
     }
 }

@@ -6,8 +6,8 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.TestContainersSetup
-import uk.matvey.slon.param.TextParam.Companion.text
-import uk.matvey.slon.param.UuidParam.Companion.uuid
+import uk.matvey.slon.value.PgText.Companion.toPgText
+import uk.matvey.slon.value.PgUuid.Companion.toPgUuid
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.repo.RepoKit.deleteFrom
 import uk.matvey.slon.repo.RepoKit.executePlain
@@ -24,16 +24,16 @@ class DeleteQueryTest : TestContainersSetup() {
 
         repo.insertInto("delete_query_test") {
             values(
-                "id" to uuid(id),
-                "name" to text(randomAlphabetic())
+                "id" to id.toPgUuid(),
+                "name" to randomAlphabetic().toPgText(),
             )
         }
 
         // when
-        repo.deleteFrom("delete_query_test", "id = ?", uuid(id))
+        repo.deleteFrom("delete_query_test", "id = ?", id.toPgUuid())
 
         // then
-        val result = repo.queryOneOrNull("select * from delete_query_test where id = ?", listOf(uuid(id))) {}
+        val result = repo.queryOneOrNull("select * from delete_query_test where id = ?", listOf(id.toPgUuid())) {}
         assertThat(result).isNull()
     }
 

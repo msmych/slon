@@ -37,11 +37,13 @@ dependencies {
 
     implementation("uk.matvey:kit:$kitVersion")
 
-    testFixturesImplementation(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
-    testFixturesImplementation("org.testcontainers:postgresql")
     testImplementation(platform("org.junit:junit-bom:$junitVersion"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+
+    testFixturesImplementation(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
+    testFixturesImplementation("org.testcontainers:postgresql")
+
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
     testImplementation("org.assertj:assertj-core:$assertjVersion")
 }
@@ -105,7 +107,7 @@ publishing {
                 url = uri("https://maven.pkg.github.com/msmych/slon")
                 credentials {
                     username = System.getenv("GITHUB_ACTOR")
-                    password = System.getenv("GH_TOKEN")
+                    password = System.getenv("GH_PACKAGES_RW_TOKEN")
                 }
             }
 //            maven {
@@ -119,24 +121,24 @@ tasks.withType<AbstractPublishToMaven>().configureEach {
     dependsOn("sourcesJar", "javadocJar", "testFixturesJar")
 }
 
-jreleaser {
-    signing {
-        setActive("ALWAYS")
-        armored = true
-    }
-    deploy {
-        maven {
-            mavenCentral {
-                create("sonatype") {
-                    setActive("ALWAYS")
-                    namespace = "uk.matvey"
-                    deploymentId = "slon"
-                    url = "https://central.sonatype.com/api/v1/publisher"
-                    stagingRepository("build/staging-deploy")
-                }
-            }
-        }
-        group = "uk.matvey"
-        version = slonVersion
-    }
-}
+//jreleaser {
+//    signing {
+//        setActive("ALWAYS")
+//        armored = true
+//    }
+//    deploy {
+//        maven {
+//            mavenCentral {
+//                create("sonatype") {
+//                    setActive("ALWAYS")
+//                    namespace = "uk.matvey"
+//                    deploymentId = "slon"
+//                    url = "https://central.sonatype.com/api/v1/publisher"
+//                    stagingRepository("build/staging-deploy")
+//                }
+//            }
+//        }
+//        group = "uk.matvey"
+//        version = slonVersion
+//    }
+//}

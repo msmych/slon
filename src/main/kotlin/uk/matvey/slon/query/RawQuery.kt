@@ -1,12 +1,12 @@
 package uk.matvey.slon.query
 
 import uk.matvey.slon.RecordReader
-import uk.matvey.slon.param.Param
+import uk.matvey.slon.value.PgValue
 import java.sql.Connection
 
 class RawQuery<T>(
     private val query: String,
-    private val params: List<Param>,
+    private val params: List<PgValue>,
     private val read: (RecordReader) -> T,
 ) : Query<List<T>> {
 
@@ -36,7 +36,7 @@ class RawQuery<T>(
 
     companion object {
 
-        fun <T> rawQuery(query: String, params: List<Param>, read: (RecordReader) -> T): RawQuery<T> {
+        fun <T> rawQuery(query: String, params: List<PgValue>, read: (RecordReader) -> T): RawQuery<T> {
             return RawQuery(query, params, read)
         }
     }

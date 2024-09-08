@@ -1,6 +1,11 @@
-name: Publish package
+name: Publish to GitHub Packages
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version'
+        required: true
 
 jobs:
   release:
@@ -9,7 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Set up JDK
+      - name: Setup JDK
         uses: actions/setup-java@v2
         with:
           java-version: '21'
@@ -19,8 +24,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3.4.2
 
       - name: Release
-        run: |
-          ./gradlew publish
+        run: ./gradlew publish -PreleaseVersion=${{ github.event.inputs.version }}
         env:
           GH_PACKAGES_RO_TOKEN: ${{ secrets.GH_PACKAGES_RO_TOKEN }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_PACKAGES_RW_TOKEN: ${{ secrets.GH_PACKAGES_RW_TOKEN }}

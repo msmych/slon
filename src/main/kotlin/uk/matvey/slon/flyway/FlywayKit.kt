@@ -1,4 +1,4 @@
-package uk.matvey.slon
+package uk.matvey.slon.flyway
 
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.configuration.FluentConfiguration

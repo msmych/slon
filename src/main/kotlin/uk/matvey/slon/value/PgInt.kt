@@ -1,9 +1,9 @@
-package uk.matvey.slon.param
+package uk.matvey.slon.value
 
 import java.sql.PreparedStatement
 import java.sql.Types
 
-class IntParam(private val value: Long?) : Param() {
+class PgInt(private val value: Long?) : PgValue() {
 
     override fun setValue(statement: PreparedStatement, index: Int): Int {
         if (value == null) {
@@ -16,8 +16,8 @@ class IntParam(private val value: Long?) : Param() {
 
     companion object {
 
-        fun int(value: Long?) = IntParam(value)
+        fun Long?.toPgInt() = PgInt(this)
 
-        fun int(value: Int?) = int(value?.toLong())
+        fun Int?.toPgInt() = this?.toLong().toPgInt()
     }
 }
