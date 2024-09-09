@@ -1,10 +1,8 @@
 package uk.matvey.slon.access
 
 import uk.matvey.slon.RecordReader
-import uk.matvey.slon.value.PgValue
 import uk.matvey.slon.query.Query
-import uk.matvey.slon.query.RawQuery.Companion.rawQuery
-import uk.matvey.slon.query.update.RawUpdateQuery.Companion.rawUpdate
+import uk.matvey.slon.query.Update
 import java.sql.Connection
 import java.sql.Connection.TRANSACTION_READ_COMMITTED
 
@@ -15,35 +13,29 @@ class Access(private val connection: Connection) {
         connection.autoCommit = false
     }
 
-    fun <T> execute(query: Query<T>): T {
-        return query.execute(connection)
+    fun execute(update: Update): Int {
+        return connection.prepareStatement(update.sql()).use { statement ->
+            var index = 1
+            update.params().forEach { param ->
+                index = param.setValue(statement, index)
+            }
+            statement.executeUpdate()
+        }
     }
 
-    fun executePlain(query: String) {
-        execute(rawUpdate(query))
-    }
-
-    fun <T> query(
-        query: String,
-        params: List<PgValue> = listOf(),
-        read: (RecordReader) -> T
-    ): List<T> {
-        return execute(rawQuery(query, params, read))
-    }
-
-    fun <T> queryOneOrNull(
-        query: String,
-        params: List<PgValue> = listOf(),
-        read: (RecordReader) -> T
-    ): T? {
-        return execute(rawQuery(query, params, read).oneOrNull())
-    }
-
-    fun <T> queryOne(
-        query: String,
-        params: List<PgValue> = listOf(),
-        read: (RecordReader) -> T
-    ): T {
-        return execute(rawQuery(query, params, read).one())
+    fun <T> query(query: Query<T>): List<T> {
+        return connection.prepareStatement(query.sql()).use { statement ->
+            var index = 1
+            query.params().forEach { param ->
+                index = param.setValue(statement, index)
+            }
+            statement.executeQuery().use { resultSet ->
+                val list = mutableListOf<T>()
+                while (resultSet.next()) {
+                    list += query.read(RecordReader(resultSet))
+                }
+                list
+            }
+        }
     }
 }

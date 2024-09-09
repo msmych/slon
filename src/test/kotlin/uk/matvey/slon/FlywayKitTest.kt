@@ -4,8 +4,8 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.matvey.slon.flyway.FlywayKit.flywayMigrate
+import uk.matvey.slon.query.Query.Companion.plainQuery
 import uk.matvey.slon.repo.Repo
-import uk.matvey.slon.repo.RepoKit.queryOne
 
 class FlywayKitTest : TestContainersSetup() {
 
@@ -18,7 +18,12 @@ class FlywayKitTest : TestContainersSetup() {
         flywayMigrate(dataSource = dataSource())
 
         // then
-        val count = repo.queryOne("select count(*) from migration_test") { it.int(1) }
-        assertThat(count).isEqualTo(1)
+        repo.access { a ->
+            a.query(
+                plainQuery("select count(*) from migration_test") {
+                    assertThat(it.int(1)).isEqualTo(1)
+                }
+            )
+        }
     }
 }
