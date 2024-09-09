@@ -1,4 +1,4 @@
-package uk.matvey.slon.query.update
+package uk.matvey.slon.query
 
 import uk.matvey.slon.value.PgValue
 

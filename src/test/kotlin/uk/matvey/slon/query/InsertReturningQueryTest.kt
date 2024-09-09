@@ -7,15 +7,14 @@ import org.junit.jupiter.api.Test
 import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
+import uk.matvey.slon.query.InsertOneBuilder.Companion.insertOneInto
+import uk.matvey.slon.query.OnConflictClause.Companion.doNothing
+import uk.matvey.slon.query.Query.Companion.plainQuery
+import uk.matvey.slon.query.Update.Companion.plainUpdate
+import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.value.Pg
 import uk.matvey.slon.value.Pg.Companion.genRandomUuid
 import uk.matvey.slon.value.PgText.Companion.toPgText
-import uk.matvey.slon.value.PgTimestamp.Companion.toPgTimestamp
-import uk.matvey.slon.repo.Repo
-import uk.matvey.slon.repo.RepoKit.insertInto
-import uk.matvey.slon.repo.RepoKit.insertReturning
-import uk.matvey.slon.repo.RepoKit.insertReturningOne
-import uk.matvey.slon.repo.RepoKit.queryOneOrNull
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit.MILLIS
@@ -38,24 +37,31 @@ class InsertReturningQueryTest : TestContainersSetup() {
     @Test
     fun `should insert returning`() = runTest {
         // when / then
-        repo.insertReturningOne("insert_returning_query_test") {
-            values("id" to genRandomUuid(), "created_at" to Pg.now())
-            returning<Unit>(listOf("id")) { r ->
-                assertThat(r.uuidOrNull("id")).isNotNull()
-            }
+        repo.access { a ->
+            a.query(
+                insertOneInto("insert_returning_query_test")
+                    .set("id", genRandomUuid())
+                    .set("created_at", Pg.now())
+                    .returning(listOf("id")) { reader ->
+                        assertThat(reader.uuidOrNull("id")).isNotNull()
+                    }
+            )
         }
     }
 
     @Test
     fun `should insert returning all`() = runTest {
         // when / then
-        repo.insertReturning("insert_returning_query_test") {
-            values(
-                "id" to genRandomUuid(),
-                "name" to randomAlphabetic().toPgText(),
-                "created_at" to Pg.now(),
+        repo.access { a ->
+            a.query(
+                insertOneInto("insert_returning_query_test")
+                    .set("id", genRandomUuid())
+                    .set("name", randomAlphabetic())
+                    .set("created_at", Pg.now())
+                    .returning { reader ->
+                        InsertReturningQueryTestRecord.from(reader)
+                    }
             )
-            returning(InsertReturningQueryTestRecord::from)
         }
     }
 
@@ -65,30 +71,43 @@ class InsertReturningQueryTest : TestContainersSetup() {
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomAlphabetic()
 
-        repo.insertInto("insert_returning_query_test") {
-            values(
-                "id" to genRandomUuid(),
-                "name" to name.toPgText(),
-                "created_at" to createdAt.toPgTimestamp(),
+        repo.access { a ->
+            a.execute(
+                insertOneInto("insert_returning_query_test") {
+                    set("id", genRandomUuid())
+                    set("name", name)
+                    set("created_at", createdAt)
+                }
             )
         }
 
         // when
-        repo.insertInto("insert_returning_query_test") {
-            values(
-                "id" to genRandomUuid(),
-                "name" to name.toPgText(),
-                "created_at" to createdAt.toPgTimestamp(),
+        repo.access { a ->
+            a.execute(
+                insertOneInto("insert_returning_query_test") {
+                    set("id", genRandomUuid())
+                    set("name", name)
+                    set("created_at", createdAt)
+                    onConflict(
+                        OnConflictClause(
+                            listOf("created_at"),
+                            "update set created_at = excluded.created_at + interval '1 hours'"
+                        )
+                    )
+                }
             )
-            onConflict(listOf("created_at"), "update set created_at = excluded.created_at + interval '1 hours'")
         }
 
         // then
-        val result = repo.queryOneOrNull(
-            "select * from insert_returning_query_test where name = ?",
-            listOf(name.toPgText())
-        ) { r ->
-            assertThat(r.instant("created_at")).isEqualTo(createdAt.plus(Duration.ofHours(1)))
+        val result = repo.access { a ->
+            a.query(
+                plainQuery(
+                    "select * from insert_returning_query_test where name = ?",
+                    listOf(name.toPgText())
+                ) { r ->
+                    assertThat(r.instant("created_at")).isEqualTo(createdAt.plus(Duration.ofHours(1)))
+                }
+            ).singleOrNull()
         }
         assertThat(result).isNotNull
     }
@@ -99,30 +118,38 @@ class InsertReturningQueryTest : TestContainersSetup() {
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomAlphabetic()
 
-        repo.insertInto("insert_returning_query_test") {
-            values(
-                "id" to genRandomUuid(),
-                "name" to name.toPgText(),
-                "created_at" to createdAt.toPgTimestamp(),
+        repo.access { a ->
+            a.execute(
+                insertOneInto("insert_returning_query_test") {
+                    set("id", genRandomUuid())
+                    set("name", name)
+                    set("created_at", createdAt)
+                }
             )
         }
 
         // when
-        repo.insertInto("insert_returning_query_test") {
-            values(
-                "id" to genRandomUuid(),
-                "name" to name.toPgText(),
-                "created_at" to createdAt.toPgTimestamp(),
+        repo.access { a ->
+            a.execute(
+                insertOneInto("insert_returning_query_test") {
+                    set("id", genRandomUuid())
+                    set("name", name)
+                    set("created_at", createdAt)
+                    onConflict(doNothing())
+                }
             )
-            onConflictDoNothing()
         }
 
         // then
-        val result = repo.queryOneOrNull(
-            "select * from insert_returning_query_test where name = ?",
-            listOf(name.toPgText())
-        ) { r ->
-            assertThat(r.instant("created_at")).isEqualTo(createdAt)
+        val result = repo.access { a ->
+            a.query(
+                plainQuery(
+                    "select * from insert_returning_query_test where name = ?",
+                    listOf(name.toPgText())
+                ) { r ->
+                    assertThat(r.instant("created_at")).isEqualTo(createdAt)
+                }
+            ).singleOrNull()
         }
         assertThat(result).isNotNull
     }
@@ -136,18 +163,22 @@ class InsertReturningQueryTest : TestContainersSetup() {
         fun initSetup() = runTest {
             repo = Repo(dataSource())
             repo.access { a ->
-                a.executePlain(
-                    """
+                a.execute(
+                    plainUpdate(
+                        """
                 create table if not exists insert_returning_query_test (
                     id uuid null,
                     name text null,
                     created_at timestamp not null
                 )
                 """.trimIndent()
+                    )
                 )
-                a.executePlain(
-                    """create unique index if not exists insert_returning_query_test_created_at_idx
+                a.execute(
+                    plainUpdate(
+                        """create unique index if not exists insert_returning_query_test_created_at_idx
                     | on insert_returning_query_test (created_at)""".trimMargin()
+                    )
                 )
             }
         }

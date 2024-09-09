@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.0.0"
+    kotlin("jvm") version "2.0.20"
     `java-library`
     `java-test-fixtures`
     `maven-publish`
@@ -9,7 +9,7 @@ plugins {
 repositories {
     mavenCentral()
     maven {
-        name = "GitHubPackages"
+        name = "KitPackages"
         url = uri("https://maven.pkg.github.com/msmych/kit")
         credentials {
             username = "GitHubPackages-RO"
@@ -63,20 +63,19 @@ kotlin {
     jvmToolchain(21)
 }
 
-val slonVersion = project.findProperty("releaseVersion") as? String ?: "0.1.0-SNAPSHOT"
+group = "uk.matvey"
+version = project.findProperty("releaseVersion") as? String ?: "0.1.0-SNAPSHOT"
 
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            groupId = "uk.matvey"
+            groupId = project.group as String
             artifactId = "slon"
-            version = slonVersion
+            version = project.version as String
 
             from(components["java"])
 
             pom {
-                groupId = "uk.matvey"
-                artifactId = "slon"
                 name = "Slon"
                 description = "Lightweight Kotlin library to work with Postgres"
                 url = "https://github.com/msmych/slon"
@@ -118,10 +117,6 @@ publishing {
         }
     }
 }
-
-//tasks.withType<AbstractPublishToMaven>().configureEach {
-//    dependsOn("sourcesJar", "javadocJar", "testFixturesJar")
-//}
 
 //jreleaser {
 //    signing {

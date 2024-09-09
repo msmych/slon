@@ -14,22 +14,16 @@ import uk.matvey.kit.random.RandomKit.randomLong
 import uk.matvey.kit.string.StringKit.toUuid
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
-import uk.matvey.slon.access.AccessKit.deleteFrom
-import uk.matvey.slon.access.AccessKit.insertInto
-import uk.matvey.slon.access.AccessKit.update
 import uk.matvey.slon.exception.PgNotNullViolationException
 import uk.matvey.slon.exception.PgUniqueViolationException
-import uk.matvey.slon.query.update.InsertOneQuery.Builder.Companion.insertOneInto
-import uk.matvey.slon.repo.RepoKit.insertInto
-import uk.matvey.slon.repo.RepoKit.query
-import uk.matvey.slon.repo.RepoKit.queryOne
+import uk.matvey.slon.query.DeleteQueryBuilder.Companion.deleteFrom
+import uk.matvey.slon.query.InsertOneBuilder.Companion.insertOneInto
+import uk.matvey.slon.query.InsertQueryBuilder.Companion.insertInto
+import uk.matvey.slon.query.Query.Companion.plainQuery
+import uk.matvey.slon.query.Update.Companion.plainUpdate
+import uk.matvey.slon.query.UpdateQueryBuilder.Companion.update
 import uk.matvey.slon.value.Pg.Companion.genRandomUuid
-import uk.matvey.slon.value.PgArray.Companion.toPgArray
-import uk.matvey.slon.value.PgDate.Companion.toPgDate
-import uk.matvey.slon.value.PgInt.Companion.toPgInt
-import uk.matvey.slon.value.PgJsonb.Companion.toPgJsonb
 import uk.matvey.slon.value.PgText.Companion.toPgText
-import uk.matvey.slon.value.PgTimestamp.Companion.toPgTimestamp
 import uk.matvey.slon.value.PgUuid
 import uk.matvey.slon.value.PgUuid.Companion.toPgUuid
 import java.time.Instant
@@ -116,8 +110,15 @@ class RepoTest : TestContainersSetup() {
             } else {
                 "id = ?" to id.toPgUuid()
             }
-            repo.queryOne("select * from repo_test where $condition", listOf(conditionParam)) { r ->
-                assertThat(r.rawOrNull(k)).isNull()
+            repo.access { a ->
+                a.query(
+                    plainQuery(
+                        "select * from repo_test where $condition",
+                        listOf(conditionParam)
+                    ) { r ->
+                        assertThat(r.rawOrNull(k)).isNull()
+                    }
+                )
             }
         }
     }
@@ -130,33 +131,43 @@ class RepoTest : TestContainersSetup() {
         val id3 = "d5ffb4cd-583b-4423-b25b-af8882aa057e".toUuid()
         val newName = randomAlphabetic()
 
-        repo.insertInto("repo_test") {
-            columns("id", "name")
-            values(id1.toPgUuid(), name.toPgText())
-            values(id2.toPgUuid(), name.toPgText())
+        repo.access { a ->
+            a.execute(
+                insertInto("repo_test")
+                    .columns("id", "name")
+                    .values(id1.toPgUuid(), name.toPgText())
+                    .values(id2.toPgUuid(), name.toPgText())
+                    .build()
+            )
         }
 
         // when
         repo.access { a ->
-            a.insertInto("repo_test") {
-                values(
-                    "id" to id3.toPgUuid(),
-                    "name" to name.toPgText(),
-                )
-            }
-            a.update("repo_test") {
-                set("name", newName.toPgText())
-                where("id = ?", id1.toPgUuid())
-            }
-            a.deleteFrom("repo_test", "id = ?", id2.toPgUuid())
+            a.execute(insertOneInto("repo_test") {
+                set("id", id3.toPgUuid())
+                set("name", name.toPgText())
+            })
+            a.execute(
+                update("repo_test")
+                    .set("name", newName)
+                    .where("id = ?", id1.toPgUuid())
+            )
+            a.execute(
+                deleteFrom("repo_test")
+                    .where("id = ?", id2.toPgUuid())
+            )
         }
 
         // then
-        val result = repo.query(
-            "select * from repo_test where id in (?, ?, ?) order by id",
-            listOf(id1, id2, id3).map { it.toPgUuid() },
-            RepoTestRecord::from
-        )
+        val result = repo.access { a ->
+            a.query(
+                plainQuery(
+                    "select * from repo_test where id in (?, ?, ?) order by id",
+                    listOf(id1, id2, id3).map { it.toPgUuid() },
+                    RepoTestRecord::from
+                )
+            )
+        }
         assertThat(result).hasSize(2)
         assertThat(result[0].id).isEqualTo(id1)
         assertThat(result[0].name).isEqualTo(newName)
@@ -170,22 +181,31 @@ class RepoTest : TestContainersSetup() {
         val name = randomAlphabetic()
 
         // when
-        repo.insertInto("repo_test") {
-            values(
-                "id" to genRandomUuid(),
-                "age" to age.toPgInt(),
-                "code" to code.toPgInt(),
-                "name" to name.toPgText(),
-                "birth_date" to birthDate.toPgDate(),
-                "created_at" to createdAt.toPgTimestamp(),
-                "details" to details.toPgJsonb(),
-                "tags" to tags.toPgArray(),
+        repo.access { a ->
+            a.execute(
+                insertOneInto("repo_test") {
+                    set("id", genRandomUuid())
+                    set("age", age)
+                    set("code", code)
+                    set("name", name)
+                    set("birth_date", birthDate)
+                    set("created_at", createdAt)
+                    set("details", details)
+                    set("tags", tags)
+                }
             )
         }
 
         // then
-        repo.queryOne("select * from repo_test where name = ?", listOf(name.toPgText())) { r ->
-            assertThat(r.uuid("id")).isNotNull
+        repo.access { a ->
+            a.query(
+                plainQuery(
+                    "select * from repo_test where name = ?",
+                    listOf(name.toPgText()),
+                ) { r ->
+                    assertThat(r.uuid("id")).isNotNull
+                }
+            )
         }
     }
 
@@ -196,16 +216,19 @@ class RepoTest : TestContainersSetup() {
 
         // when / then
         repo.access { a ->
-            a.insertInto("repo_test") {
-                values(
-                    "id" to genRandomUuid(),
-                    "name" to name.toPgText(),
-                )
-            }
-            val record = a.queryOne(
-                "select * from repo_test where name = ?", listOf(name.toPgText()),
-                RepoTestRecord::from
+            a.execute(
+                insertOneInto("repo_test") {
+                    set("id", genRandomUuid())
+                    set("name", name)
+                }
             )
+            val record = a.query(
+                plainQuery(
+                    "select * from repo_test where name = ?",
+                    listOf(name.toPgText()),
+                    RepoTestRecord::from
+                )
+            ).single()
             assertThat(record.name).isEqualTo(name)
         }
     }
@@ -214,8 +237,12 @@ class RepoTest : TestContainersSetup() {
     fun `should throw not null violation exception`() = runTest {
         // when / then
         val e = assertThrows<PgNotNullViolationException> {
-            repo.insertInto("repo_pk_test") {
-                values("id" to PgUuid(null))
+            repo.access { a ->
+                a.execute(
+                    insertOneInto("repo_pk_test") {
+                        set("id", PgUuid(null))
+                    }
+                )
             }
         }
         assertThat(e.table).isEqualTo("repo_pk_test")
@@ -226,14 +253,22 @@ class RepoTest : TestContainersSetup() {
     fun `should throw unique violation exception`() = runTest {
         // given
         val id = randomUUID()
-        repo.insertInto("repo_pk_test") {
-            values("id" to id.toPgUuid())
+        repo.access { a ->
+            a.execute(
+                insertOneInto("repo_pk_test") {
+                    set("id", id)
+                }
+            )
         }
 
         // when / then
         val e = assertThrows<PgUniqueViolationException> {
-            repo.insertInto("repo_pk_test") {
-                values("id" to id.toPgUuid())
+            repo.access { a ->
+                a.execute(
+                    insertOneInto("repo_pk_test") {
+                        set("id", id)
+                    }
+                )
             }
         }
         assertThat(e.constraint).isEqualTo("repo_pk_test_pkey")
@@ -248,8 +283,9 @@ class RepoTest : TestContainersSetup() {
         fun initSetup() = runTest {
             repo = Repo(dataSource())
             repo.access { a ->
-                a.executePlain(
-                    """
+                a.execute(
+                    plainUpdate(
+                        """
                 create table if not exists repo_test (
                     id uuid null,
                     age int null,
@@ -261,13 +297,16 @@ class RepoTest : TestContainersSetup() {
                     tags text[] null
                 )
                 """.trimIndent()
+                    )
                 )
-                a.executePlain(
-                    """
+                a.execute(
+                    plainUpdate(
+                        """
                 create table if not exists repo_pk_test (
                     id uuid primary key not null
                 )
                 """.trimIndent()
+                    )
                 )
             }
         }

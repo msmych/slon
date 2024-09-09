@@ -6,13 +6,12 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.TestContainersSetup
-import uk.matvey.slon.value.PgText.Companion.toPgText
-import uk.matvey.slon.value.PgUuid.Companion.toPgUuid
+import uk.matvey.slon.query.DeleteQueryBuilder.Companion.deleteFrom
+import uk.matvey.slon.query.InsertOneBuilder.Companion.insertOneInto
+import uk.matvey.slon.query.Query.Companion.plainQuery
+import uk.matvey.slon.query.Update.Companion.plainUpdate
 import uk.matvey.slon.repo.Repo
-import uk.matvey.slon.repo.RepoKit.deleteFrom
-import uk.matvey.slon.repo.RepoKit.executePlain
-import uk.matvey.slon.repo.RepoKit.insertInto
-import uk.matvey.slon.repo.RepoKit.queryOneOrNull
+import uk.matvey.slon.value.PgUuid.Companion.toPgUuid
 import java.util.UUID.randomUUID
 
 class DeleteQueryTest : TestContainersSetup() {
@@ -22,18 +21,28 @@ class DeleteQueryTest : TestContainersSetup() {
         // given
         val id = randomUUID()
 
-        repo.insertInto("delete_query_test") {
-            values(
-                "id" to id.toPgUuid(),
-                "name" to randomAlphabetic().toPgText(),
+        repo.access { a ->
+            a.execute(
+                insertOneInto("delete_query_test") {
+                    set("id", id)
+                    set("name", randomAlphabetic())
+                }
             )
         }
 
         // when
-        repo.deleteFrom("delete_query_test", "id = ?", id.toPgUuid())
+        repo.access { a ->
+            a.execute(
+                deleteFrom("delete_query_test")
+                    .where("id = ?", id.toPgUuid())
+            )
+        }
 
         // then
-        val result = repo.queryOneOrNull("select * from delete_query_test where id = ?", listOf(id.toPgUuid())) {}
+        val result = repo.access { a ->
+            a.query(plainQuery("select * from delete_query_test where id = ?", listOf(id.toPgUuid())) { })
+                .singleOrNull()
+        }
         assertThat(result).isNull()
     }
 
@@ -45,14 +54,18 @@ class DeleteQueryTest : TestContainersSetup() {
         @JvmStatic
         fun initSetup() = runTest {
             repo = Repo(dataSource())
-            repo.executePlain(
-                """
+            repo.access { a->
+                a.execute(
+                    plainUpdate(
+                        """
                 create table if not exists delete_query_test (
                     id uuid null,
                     name text null
                 )
                 """.trimIndent()
-            )
+                    )
+                )
+            }
         }
     }
 }

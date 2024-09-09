@@ -6,14 +6,13 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.matvey.slon.TestContainersSetup
-import uk.matvey.slon.exception.OptimisticLockException
-import uk.matvey.slon.value.PgText.Companion.toPgText
-import uk.matvey.slon.value.PgUuid.Companion.toPgUuid
-import uk.matvey.slon.query.update.DeleteQueryBuilder.Companion.deleteFrom
-import uk.matvey.slon.query.update.UpdateQueryBuilder.Companion.update
+import uk.matvey.slon.access.AccessKit.updateSingle
+import uk.matvey.slon.exception.UpdateCountMismatchException
+import uk.matvey.slon.query.DeleteQueryBuilder.Companion.deleteFrom
+import uk.matvey.slon.query.Update.Companion.plainUpdate
+import uk.matvey.slon.query.UpdateQueryBuilder.Companion.update
 import uk.matvey.slon.repo.Repo
-import uk.matvey.slon.repo.RepoKit.execute
-import uk.matvey.slon.repo.RepoKit.executePlain
+import uk.matvey.slon.value.PgUuid.Companion.toPgUuid
 import java.util.UUID.randomUUID
 
 class RequireSingleUpdateQueryTest : TestContainersSetup() {
@@ -21,28 +20,30 @@ class RequireSingleUpdateQueryTest : TestContainersSetup() {
     @Test
     fun `should throw optimistic lock exception for update`() = runTest {
         // when / then
-        val exception = assertThrows<OptimisticLockException> {
-            repo.execute(
-                update("optimistic_update_query_test")
-                    .set("name", "New Name".toPgText())
-                    .where("id = ?", randomUUID().toPgUuid())
-                    .requireSingleUpdate()
-            )
+        val exception = assertThrows<UpdateCountMismatchException> {
+            repo.access { a ->
+                a.updateSingle(
+                    update("optimistic_update_query_test")
+                        .set("name", "New Name")
+                        .where("id = ?", randomUUID().toPgUuid())
+                )
+            }
         }
-        assertThat(exception.message).isEqualTo("Condition was not satisfied")
+        assertThat(exception.message).isEqualTo("Expected 1 updates but got 0")
     }
 
     @Test
     fun `should throw optimistic lock exception for delete`() = runTest {
         // when / then
-        val exception = assertThrows<OptimisticLockException> {
-            repo.execute(
-                deleteFrom("optimistic_update_query_test")
-                    .where("id = ?", randomUUID().toPgUuid())
-                    .requireSingleUpdate()
-            )
+        val exception = assertThrows<UpdateCountMismatchException> {
+            repo.access { a ->
+                a.updateSingle(
+                    deleteFrom("optimistic_update_query_test")
+                        .where("id = ?", randomUUID().toPgUuid())
+                )
+            }
         }
-        assertThat(exception.message).isEqualTo("Condition was not satisfied")
+        assertThat(exception.message).isEqualTo("Expected 1 updates but got 0")
     }
 
     companion object {
@@ -53,15 +54,19 @@ class RequireSingleUpdateQueryTest : TestContainersSetup() {
         @JvmStatic
         fun initSetup() = runTest {
             repo = Repo(dataSource())
-            repo.executePlain(
-                """
+            repo.access { a ->
+                a.execute(
+                    plainUpdate(
+                        """
                 create table if not exists optimistic_update_query_test (
                     id uuid null,
                     name text null,
                     created_at timestamp null
                 )
                 """.trimIndent()
-            )
+                    )
+                )
+            }
         }
     }
 }
