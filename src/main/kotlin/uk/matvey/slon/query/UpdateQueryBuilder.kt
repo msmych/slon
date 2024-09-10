@@ -1,6 +1,7 @@
 package uk.matvey.slon.query
 
 import kotlinx.serialization.json.JsonElement
+import uk.matvey.slon.RecordReader
 import uk.matvey.slon.value.PgArray.Companion.toPgArray
 import uk.matvey.slon.value.PgDate.Companion.toPgDate
 import uk.matvey.slon.value.PgInt.Companion.toPgInt
@@ -74,20 +75,40 @@ class UpdateQueryBuilder(
         set(column, value.toPgArray())
     }
 
-    fun where(condition: String, params: List<PgValue>): UpdateQuery {
+    fun where(condition: String, params: List<PgValue>) = apply {
         this.condition = condition
         this.conditionParams += params
-        return UpdateQuery(table, values, condition, conditionParams)
     }
 
-    fun where(condition: String, vararg params: PgValue): UpdateQuery {
-        return this.where(condition, params.toList())
+    fun where(condition: String, vararg params: PgValue) = apply {
+        where(condition, params.toList())
+    }
+
+    fun build() = UpdateQuery(table, values, condition, conditionParams)
+
+    fun <T> returning(
+        returning: ReturningClause = ReturningClause.all(),
+        read: (RecordReader) -> T
+    ): UpdateReturningQuery<T> {
+        return object : UpdateReturningQuery<T>(build(), returning) {
+            override fun read(reader: RecordReader): T {
+                return read(reader)
+            }
+        }
+    }
+
+    fun <T> returning(returning: List<String>, read: (RecordReader) -> T): UpdateReturningQuery<T> {
+        return returning(ReturningClause(returning), read)
     }
 
     companion object {
 
         fun update(table: String): UpdateQueryBuilder {
             return UpdateQueryBuilder(table)
+        }
+
+        fun update(table: String, block: UpdateQueryBuilder.() -> UpdateQueryBuilder): UpdateQuery {
+            return update(table).block().build()
         }
     }
 }

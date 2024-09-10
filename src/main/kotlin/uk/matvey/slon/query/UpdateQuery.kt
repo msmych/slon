@@ -5,8 +5,8 @@ import uk.matvey.slon.value.PgValue
 class UpdateQuery(
     private val table: String,
     private val values: List<Pair<String, PgValue>>,
-    private var condition: String,
-    private var conditionParams: List<PgValue>,
+    private val condition: String,
+    private val conditionParams: List<PgValue>,
 ) : Update {
 
     override fun sql(): String {

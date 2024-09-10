@@ -14,13 +14,14 @@ import uk.matvey.kit.random.RandomKit.randomLong
 import uk.matvey.kit.string.StringKit.toUuid
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
+import uk.matvey.slon.access.AccessKit.query
+import uk.matvey.slon.access.AccessKit.queryOne
+import uk.matvey.slon.access.AccessKit.update
 import uk.matvey.slon.exception.PgNotNullViolationException
 import uk.matvey.slon.exception.PgUniqueViolationException
 import uk.matvey.slon.query.DeleteQueryBuilder.Companion.deleteFrom
-import uk.matvey.slon.query.InsertOneBuilder.Companion.insertOneInto
+import uk.matvey.slon.query.InsertOneQueryBuilder.Companion.insertOneInto
 import uk.matvey.slon.query.InsertQueryBuilder.Companion.insertInto
-import uk.matvey.slon.query.Query.Companion.plainQuery
-import uk.matvey.slon.query.Update.Companion.plainUpdate
 import uk.matvey.slon.query.UpdateQueryBuilder.Companion.update
 import uk.matvey.slon.value.Pg.Companion.genRandomUuid
 import uk.matvey.slon.value.PgText.Companion.toPgText
@@ -112,13 +113,11 @@ class RepoTest : TestContainersSetup() {
             }
             repo.access { a ->
                 a.query(
-                    plainQuery(
-                        "select * from repo_test where $condition",
-                        listOf(conditionParam)
-                    ) { r ->
-                        assertThat(r.rawOrNull(k)).isNull()
-                    }
-                )
+                    "select * from repo_test where $condition",
+                    listOf(conditionParam)
+                ) { r ->
+                    assertThat(r.rawOrNull(k)).isNull()
+                }
             }
         }
     }
@@ -148,9 +147,10 @@ class RepoTest : TestContainersSetup() {
                 set("name", name.toPgText())
             })
             a.execute(
-                update("repo_test")
-                    .set("name", newName)
-                    .where("id = ?", id1.toPgUuid())
+                update("repo_test") {
+                    set("name", newName)
+                    where("id = ?", id1.toPgUuid())
+                }
             )
             a.execute(
                 deleteFrom("repo_test")
@@ -161,11 +161,9 @@ class RepoTest : TestContainersSetup() {
         // then
         val result = repo.access { a ->
             a.query(
-                plainQuery(
-                    "select * from repo_test where id in (?, ?, ?) order by id",
-                    listOf(id1, id2, id3).map { it.toPgUuid() },
-                    RepoTestRecord::from
-                )
+                "select * from repo_test where id in (?, ?, ?) order by id",
+                listOf(id1, id2, id3).map { it.toPgUuid() },
+                RepoTestRecord::from
             )
         }
         assertThat(result).hasSize(2)
@@ -199,13 +197,11 @@ class RepoTest : TestContainersSetup() {
         // then
         repo.access { a ->
             a.query(
-                plainQuery(
-                    "select * from repo_test where name = ?",
-                    listOf(name.toPgText()),
-                ) { r ->
-                    assertThat(r.uuid("id")).isNotNull
-                }
-            )
+                "select * from repo_test where name = ?",
+                listOf(name.toPgText()),
+            ) { r ->
+                assertThat(r.uuid("id")).isNotNull
+            }
         }
     }
 
@@ -222,13 +218,11 @@ class RepoTest : TestContainersSetup() {
                     set("name", name)
                 }
             )
-            val record = a.query(
-                plainQuery(
-                    "select * from repo_test where name = ?",
-                    listOf(name.toPgText()),
-                    RepoTestRecord::from
-                )
-            ).single()
+            val record = a.queryOne(
+                "select * from repo_test where name = ?",
+                listOf(name.toPgText()),
+                RepoTestRecord::from
+            )
             assertThat(record.name).isEqualTo(name)
         }
     }
@@ -283,9 +277,8 @@ class RepoTest : TestContainersSetup() {
         fun initSetup() = runTest {
             repo = Repo(dataSource())
             repo.access { a ->
-                a.execute(
-                    plainUpdate(
-                        """
+                a.update(
+                    """
                 create table if not exists repo_test (
                     id uuid null,
                     age int null,
@@ -297,16 +290,13 @@ class RepoTest : TestContainersSetup() {
                     tags text[] null
                 )
                 """.trimIndent()
-                    )
                 )
-                a.execute(
-                    plainUpdate(
-                        """
+                a.update(
+                    """
                 create table if not exists repo_pk_test (
                     id uuid primary key not null
                 )
                 """.trimIndent()
-                    )
                 )
             }
         }
