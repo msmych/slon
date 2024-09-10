@@ -15,7 +15,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-class InsertOneBuilder(
+class InsertOneQueryBuilder(
     private val table: String,
 ) {
 
@@ -41,12 +41,12 @@ class InsertOneBuilder(
         this.values(values.toList())
     }
 
-    fun set(values: List<Pair<String, PgValue>>) {
+    fun set(values: List<Pair<String, PgValue>>) = apply {
         this.columns(values.map { it.first })
         this.values(values.map { it.second })
     }
 
-    fun set(vararg values: Pair<String, PgValue>) {
+    fun set(vararg values: Pair<String, PgValue>) = apply {
         this.set(values.toList())
     }
 
@@ -99,11 +99,12 @@ class InsertOneBuilder(
         this.onConflict = onConflict
     }
 
-    fun build(): InsertQuery {
-        return InsertQuery(table, columns, listOf(values), onConflict)
-    }
+    fun build() = InsertQuery(table, columns, listOf(values), onConflict)
 
-    fun <T> returning(returning: List<String> = listOf(), read: (RecordReader) -> T): InsertReturningQuery<T> {
+    fun <T> returning(
+        returning: ReturningClause = ReturningClause.all(),
+        read: (RecordReader) -> T
+    ): InsertReturningQuery<T> {
         return object : InsertReturningQuery<T>(build(), returning) {
             override fun read(reader: RecordReader): T {
                 return read(reader)
@@ -111,13 +112,17 @@ class InsertOneBuilder(
         }
     }
 
+    fun <T> returning(returning: List<String>, read: (RecordReader) -> T): InsertReturningQuery<T> {
+        return returning(ReturningClause(returning), read)
+    }
+
     companion object {
 
-        fun insertOneInto(table: String): InsertOneBuilder {
-            return InsertOneBuilder(table)
+        fun insertOneInto(table: String): InsertOneQueryBuilder {
+            return InsertOneQueryBuilder(table)
         }
 
-        fun insertOneInto(table: String, block: InsertOneBuilder.() -> InsertOneBuilder): InsertQuery {
+        fun insertOneInto(table: String, block: InsertOneQueryBuilder.() -> InsertOneQueryBuilder): InsertQuery {
             return insertOneInto(table).block().build()
         }
     }

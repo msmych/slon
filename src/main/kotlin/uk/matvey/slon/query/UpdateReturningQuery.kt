@@ -2,16 +2,16 @@ package uk.matvey.slon.query
 
 import uk.matvey.slon.value.PgValue
 
-abstract class InsertReturningQuery<T>(
-    private val insertQuery: InsertQuery,
+abstract class UpdateReturningQuery<T>(
+    private val updateQuery: UpdateQuery,
     private val returning: ReturningClause,
 ) : Query<T> {
 
     override fun sql(): String {
-        return listOf(insertQuery.sql(), returning.sql()).joinToString(" ")
+        return listOf(updateQuery.sql(), returning.sql()).joinToString(" ")
     }
 
     override fun params(): List<PgValue> {
-        return insertQuery.params()
+        return updateQuery.params()
     }
 }

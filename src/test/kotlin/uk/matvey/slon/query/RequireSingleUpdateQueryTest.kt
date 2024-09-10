@@ -1,4 +1,4 @@
-package uk.matvey.slon.query.update
+package uk.matvey.slon.query
 
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -23,9 +23,10 @@ class RequireSingleUpdateQueryTest : TestContainersSetup() {
         val exception = assertThrows<UpdateCountMismatchException> {
             repo.access { a ->
                 a.updateSingle(
-                    update("optimistic_update_query_test")
-                        .set("name", "New Name")
-                        .where("id = ?", randomUUID().toPgUuid())
+                    update("optimistic_update_query_test") {
+                        set("name", "New Name")
+                        where("id = ?", randomUUID().toPgUuid())
+                    }
                 )
             }
         }

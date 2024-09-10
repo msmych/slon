@@ -17,7 +17,7 @@ import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.exception.PgNotNullViolationException
 import uk.matvey.slon.exception.PgUniqueViolationException
 import uk.matvey.slon.query.DeleteQueryBuilder.Companion.deleteFrom
-import uk.matvey.slon.query.InsertOneBuilder.Companion.insertOneInto
+import uk.matvey.slon.query.InsertOneQueryBuilder.Companion.insertOneInto
 import uk.matvey.slon.query.InsertQueryBuilder.Companion.insertInto
 import uk.matvey.slon.query.Query.Companion.plainQuery
 import uk.matvey.slon.query.Update.Companion.plainUpdate
@@ -148,9 +148,10 @@ class RepoTest : TestContainersSetup() {
                 set("name", name.toPgText())
             })
             a.execute(
-                update("repo_test")
-                    .set("name", newName)
-                    .where("id = ?", id1.toPgUuid())
+                update("repo_test") {
+                    set("name", newName)
+                    where("id = ?", id1.toPgUuid())
+                }
             )
             a.execute(
                 deleteFrom("repo_test")

@@ -28,7 +28,7 @@ class InsertQuery(
         }
         return listOfNotNull(
             "insert into $table $columns values $values",
-            onConflict?.toSql(),
+            onConflict?.sql(),
         ).joinToString(" ")
     }
 

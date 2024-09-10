@@ -1,5 +1,6 @@
 package uk.matvey.slon.query
 
+import uk.matvey.slon.RecordReader
 import uk.matvey.slon.value.PgValue
 
 class InsertQueryBuilder(
@@ -37,10 +38,22 @@ class InsertQueryBuilder(
 
     fun build() = InsertQuery(table, columns, values, onConflict)
 
+    fun <T> returning(returning: ReturningClause = ReturningClause.all(), read: (RecordReader) -> T): InsertReturningQuery<T> {
+        return object : InsertReturningQuery<T>(build(), returning) {
+            override fun read(reader: RecordReader): T {
+                return read(reader)
+            }
+        }
+    }
+
     companion object {
 
         fun insertInto(table: String): InsertQueryBuilder {
             return InsertQueryBuilder(table)
+        }
+
+        fun insertInto(table: String, block: InsertQueryBuilder.() -> InsertQueryBuilder): InsertQuery {
+            return insertInto(table).block().build()
         }
     }
 }

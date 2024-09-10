@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
-import uk.matvey.slon.query.InsertOneBuilder.Companion.insertOneInto
+import uk.matvey.slon.query.InsertOneQueryBuilder.Companion.insertOneInto
 import uk.matvey.slon.query.OnConflictClause.Companion.doNothing
 import uk.matvey.slon.query.Query.Companion.plainQuery
 import uk.matvey.slon.query.Update.Companion.plainUpdate

@@ -1,4 +1,4 @@
-package uk.matvey.slon.query.update
+package uk.matvey.slon.query
 
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -6,28 +6,26 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.TestContainersSetup
-import uk.matvey.slon.query.InsertOneBuilder.Companion.insertOneInto
-import uk.matvey.slon.query.Query
+import uk.matvey.slon.query.DeleteQueryBuilder.Companion.deleteFrom
+import uk.matvey.slon.query.InsertOneQueryBuilder.Companion.insertOneInto
+import uk.matvey.slon.query.Query.Companion.plainQuery
 import uk.matvey.slon.query.Update.Companion.plainUpdate
-import uk.matvey.slon.query.UpdateQueryBuilder.Companion.update
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.value.PgUuid.Companion.toPgUuid
 import java.util.UUID.randomUUID
 
-class UpdateQueryTest : TestContainersSetup() {
+class DeleteQueryTest : TestContainersSetup() {
 
     @Test
-    fun `should update records`() = runTest {
+    fun `should delete records`() = runTest {
         // given
         val id = randomUUID()
-        val name = "name"
 
-        val newName = randomAlphabetic()
         repo.access { a ->
             a.execute(
-                insertOneInto("update_query_test") {
+                insertOneInto("delete_query_test") {
                     set("id", id)
-                    set("name", name)
+                    set("name", randomAlphabetic())
                 }
             )
         }
@@ -35,23 +33,17 @@ class UpdateQueryTest : TestContainersSetup() {
         // when
         repo.access { a ->
             a.execute(
-                update("update_query_test")
-                    .set("name", newName)
+                deleteFrom("delete_query_test")
                     .where("id = ?", id.toPgUuid())
             )
         }
 
         // then
-        repo.access { a ->
-            a.query(
-                Query.plainQuery(
-                    "select * from update_query_test where id = ?",
-                    listOf(id.toPgUuid()),
-                ) { r ->
-                    assertThat(r.string("name")).isEqualTo(newName)
-                }
-            )
+        val result = repo.access { a ->
+            a.query(plainQuery("select * from delete_query_test where id = ?", listOf(id.toPgUuid())) { })
+                .singleOrNull()
         }
+        assertThat(result).isNull()
     }
 
     companion object {
@@ -62,14 +54,13 @@ class UpdateQueryTest : TestContainersSetup() {
         @JvmStatic
         fun initSetup() = runTest {
             repo = Repo(dataSource())
-            repo.access { a ->
+            repo.access { a->
                 a.execute(
                     plainUpdate(
                         """
-                create table if not exists update_query_test (
+                create table if not exists delete_query_test (
                     id uuid null,
-                    name text null,
-                    created_at timestamp null
+                    name text null
                 )
                 """.trimIndent()
                     )

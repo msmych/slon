@@ -5,7 +5,7 @@ class OnConflictClause(
     private val action: String,
 ) {
 
-    fun toSql(): String {
+    fun sql(): String {
         val conflictColumns = columns.takeIf { it.isNotEmpty() }
             ?.joinToString(prefix = "(", postfix = ")")
         return listOfNotNull(
