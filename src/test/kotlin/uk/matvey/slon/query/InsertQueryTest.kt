@@ -8,11 +8,13 @@ import org.junit.jupiter.api.Test
 import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
+import uk.matvey.slon.access.AccessKit.query
+import uk.matvey.slon.access.AccessKit.queryOne
+import uk.matvey.slon.access.AccessKit.queryOneOrNull
+import uk.matvey.slon.access.AccessKit.update
 import uk.matvey.slon.query.InsertOneQueryBuilder.Companion.insertOneInto
 import uk.matvey.slon.query.InsertQueryBuilder.Companion.insertInto
 import uk.matvey.slon.query.OnConflictClause.Companion.doNothing
-import uk.matvey.slon.query.Query.Companion.plainQuery
-import uk.matvey.slon.query.Update.Companion.plainUpdate
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.value.Pg
 import uk.matvey.slon.value.Pg.Companion.genRandomUuid
@@ -86,13 +88,11 @@ class InsertQueryTest : TestContainersSetup() {
         }
 
         val result = repo.access { a ->
-            a.query(
-                plainQuery(
-                    "select * from insert_query_test where id = ?",
-                    listOf(id.toPgUuid()),
-                    InsertQueryTestRecord.Companion::from
-                )
-            ).single()
+            a.queryOne(
+                "select * from insert_query_test where id = ?",
+                listOf(id.toPgUuid()),
+                InsertQueryTestRecord::from
+            )
         }
 
         assertThat(result.id).isEqualTo(id)
@@ -120,13 +120,11 @@ class InsertQueryTest : TestContainersSetup() {
         // then
         val result = repo.access { a ->
             a.query(
-                plainQuery(
-                    "select * from insert_query_test where name = ?",
-                    listOf(name.toPgText())
-                ) { r ->
-                    assertThat(r.string("name")).isEqualTo(name)
-                }
-            )
+                "select * from insert_query_test where name = ?",
+                listOf(name.toPgText())
+            ) { r ->
+                assertThat(r.string("name")).isEqualTo(name)
+            }
         }
         assertThat(result).hasSize(3)
     }
@@ -166,14 +164,12 @@ class InsertQueryTest : TestContainersSetup() {
 
         // then
         val result = repo.access { a ->
-            a.query(
-                plainQuery(
-                    "select * from insert_query_test where name = ?",
-                    listOf(name.toPgText())
-                ) { r ->
-                    assertThat(r.instant("created_at")).isEqualTo(createdAt.plus(Duration.ofHours(1)))
-                }
-            ).singleOrNull()
+            a.queryOneOrNull(
+                "select * from insert_query_test where name = ?",
+                listOf(name.toPgText())
+            ) { r ->
+                assertThat(r.instant("created_at")).isEqualTo(createdAt.plus(Duration.ofHours(1)))
+            }
         }
         assertThat(result).isNotNull
     }
@@ -208,14 +204,12 @@ class InsertQueryTest : TestContainersSetup() {
 
         // then
         val result = repo.access { a ->
-            a.query(
-                plainQuery(
-                    "select * from insert_query_test where name = ?",
-                    listOf(name.toPgText())
-                ) { r ->
-                    assertThat(r.instant("created_at")).isEqualTo(createdAt)
-                }
-            ).singleOrNull()
+            a.queryOneOrNull(
+                "select * from insert_query_test where name = ?",
+                listOf(name.toPgText())
+            ) { r ->
+                assertThat(r.instant("created_at")).isEqualTo(createdAt)
+            }
         }
         assertThat(result).isNotNull
     }
@@ -229,22 +223,18 @@ class InsertQueryTest : TestContainersSetup() {
         fun initSetup() = runTest {
             repo = Repo(dataSource())
             repo.access { a ->
-                a.execute(
-                    plainUpdate(
-                        """
+                a.update(
+                    """
                 create table if not exists insert_query_test (
                     id uuid null,
                     name text null,
                     created_at timestamp not null
                 )
                 """.trimIndent()
-                    )
                 )
-                a.execute(
-                    plainUpdate(
-                        """create unique index if not exists insert_query_test_created_at_idx
+                a.update(
+                    """create unique index if not exists insert_query_test_created_at_idx
                     | on insert_query_test (created_at)""".trimMargin()
-                    )
                 )
             }
         }

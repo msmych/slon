@@ -6,10 +6,10 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.matvey.slon.TestContainersSetup
+import uk.matvey.slon.access.AccessKit.update
 import uk.matvey.slon.access.AccessKit.updateSingle
 import uk.matvey.slon.exception.UpdateCountMismatchException
 import uk.matvey.slon.query.DeleteQueryBuilder.Companion.deleteFrom
-import uk.matvey.slon.query.Update.Companion.plainUpdate
 import uk.matvey.slon.query.UpdateQueryBuilder.Companion.update
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.value.PgUuid.Companion.toPgUuid
@@ -56,16 +56,14 @@ class RequireSingleUpdateQueryTest : TestContainersSetup() {
         fun initSetup() = runTest {
             repo = Repo(dataSource())
             repo.access { a ->
-                a.execute(
-                    plainUpdate(
-                        """
+                a.update(
+                    """
                 create table if not exists optimistic_update_query_test (
                     id uuid null,
                     name text null,
                     created_at timestamp null
                 )
                 """.trimIndent()
-                    )
                 )
             }
         }
