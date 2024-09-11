@@ -45,6 +45,14 @@ class RecordReader(private val resultSet: ResultSet) {
 
     fun long(index: Int) = requireNotNull(longOrNull(index))
 
+    fun boolOrNull(name: String) = resultSet.getBoolean(name).orNull()
+
+    fun boolOrNull(index: Int) = resultSet.getBoolean(index).orNull()
+
+    fun bool(name: String) = requireNotNull(boolOrNull(name))
+
+    fun bool(index: Int) = requireNotNull(boolOrNull(index))
+
     fun uuidOrNull(name: String) = rawOrNull(name) as UUID?
 
     fun uuidOrNull(index: Int) = rawOrNull(index) as UUID?

@@ -3,6 +3,7 @@ package uk.matvey.slon.query
 import kotlinx.serialization.json.JsonElement
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.value.PgArray.Companion.toPgArray
+import uk.matvey.slon.value.PgBool.Companion.toPgBool
 import uk.matvey.slon.value.PgDate.Companion.toPgDate
 import uk.matvey.slon.value.PgInt.Companion.toPgInt
 import uk.matvey.slon.value.PgJsonb.Companion.toPgJsonb
@@ -69,6 +70,10 @@ class InsertOneQueryBuilder(
 
     fun set(column: String, value: Int?) = apply {
         set(column, value.toPgInt())
+    }
+
+    fun set(column: String, value: Boolean?) = apply {
+        set(column, value.toPgBool())
     }
 
     fun set(column: String, value: UUID?) = apply {
