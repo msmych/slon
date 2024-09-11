@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.kit.random.RandomKit.randomAlphanumeric
+import uk.matvey.kit.random.RandomKit.randomBool
 import uk.matvey.kit.random.RandomKit.randomInt
 import uk.matvey.kit.random.RandomKit.randomLong
 import uk.matvey.kit.string.StringKit.toUuid
@@ -38,6 +39,7 @@ class RepoTest : TestContainersSetup() {
     private val name = randomAlphabetic()
     private val age = randomInt(1..99)
     private val code = randomLong(9_999_999_999_999)
+    private val isBot = randomBool()
     private val birthDate = LocalDate.now()
     private val createdAt = Instant.now().truncatedTo(MILLIS)
     private val details = buildJsonObject {
@@ -50,6 +52,7 @@ class RepoTest : TestContainersSetup() {
         val age: Int?,
         val code: Long?,
         val name: String?,
+        val isBot: Boolean?,
         val birthDate: LocalDate?,
         val createdAt: Instant?,
         val details: String?,
@@ -64,6 +67,7 @@ class RepoTest : TestContainersSetup() {
                     reader.intOrNull("age"),
                     reader.longOrNull("code"),
                     reader.stringOrNull("name"),
+                    reader.boolOrNull("is_bot"),
                     reader.localDateOrNull("birth_date"),
                     reader.instantOrNull("created_at"),
                     reader.stringOrNull("details"),
@@ -80,6 +84,7 @@ class RepoTest : TestContainersSetup() {
             "age",
             "code",
             "name",
+            "is_bot",
             "birth_date",
             "created_at",
             "details",
@@ -97,6 +102,7 @@ class RepoTest : TestContainersSetup() {
                         set("age", age.takeUnless { k == "age" })
                         set("code", code.takeUnless { k == "code" })
                         set("name", name.takeUnless { k == "name" })
+                        set("is_bot", isBot.takeUnless { k == "is_bot" })
                         set("birth_date", birthDate.takeUnless { k == "birth_date" })
                         set("created_at", createdAt.takeUnless { k == "created_at" })
                         set("details", details.takeUnless { k == "details" })
@@ -186,6 +192,7 @@ class RepoTest : TestContainersSetup() {
                     set("age", age)
                     set("code", code)
                     set("name", name)
+                    set("is_bot", isBot)
                     set("birth_date", birthDate)
                     set("created_at", createdAt)
                     set("details", details)
@@ -284,6 +291,7 @@ class RepoTest : TestContainersSetup() {
                     age int null,
                     code bigint null,
                     name text null,
+                    is_bot bool null,
                     birth_date date null,
                     created_at timestamp null,
                     details jsonb null,
