@@ -10,7 +10,8 @@ import uk.matvey.slon.TestContainersSetup
 import uk.matvey.slon.access.AccessKit.queryOneOrNull
 import uk.matvey.slon.access.AccessKit.update
 import uk.matvey.slon.query.InsertOneQueryBuilder.Companion.insertOneInto
-import uk.matvey.slon.query.OnConflictClause.Companion.doNothing
+import uk.matvey.slon.query.OnConflict.Companion.doNothing
+import uk.matvey.slon.query.ReturningQuery.Companion.returning
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.value.Pg
 import uk.matvey.slon.value.Pg.Companion.genRandomUuid
@@ -39,9 +40,10 @@ class InsertReturningQueryTest : TestContainersSetup() {
         // when / then
         repo.access { a ->
             a.query(
-                insertOneInto("insert_returning_query_test")
-                    .set("id", genRandomUuid())
-                    .set("created_at", Pg.now())
+                insertOneInto("insert_returning_query_test") {
+                    set("id", genRandomUuid())
+                    set("created_at", Pg.now())
+                }
                     .returning(listOf("id")) { reader ->
                         assertThat(reader.uuidOrNull("id")).isNotNull()
                     }
@@ -54,10 +56,11 @@ class InsertReturningQueryTest : TestContainersSetup() {
         // when / then
         repo.access { a ->
             a.query(
-                insertOneInto("insert_returning_query_test")
-                    .set("id", genRandomUuid())
-                    .set("name", randomAlphabetic())
-                    .set("created_at", Pg.now())
+                insertOneInto("insert_returning_query_test") {
+                    set("id", genRandomUuid())
+                    set("name", randomAlphabetic())
+                    set("created_at", Pg.now())
+                }
                     .returning { reader ->
                         InsertReturningQueryTestRecord.from(reader)
                     }
@@ -89,10 +92,8 @@ class InsertReturningQueryTest : TestContainersSetup() {
                     set("name", name)
                     set("created_at", createdAt)
                     onConflict(
-                        OnConflictClause(
-                            listOf("created_at"),
-                            "update set created_at = excluded.created_at + interval '1 hours'"
-                        )
+                        listOf("created_at"),
+                        "update set created_at = excluded.created_at + interval '1 hours'"
                     )
                 }
             )

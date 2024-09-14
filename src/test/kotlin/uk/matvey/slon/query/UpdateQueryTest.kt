@@ -6,7 +6,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.TestContainersSetup
-import uk.matvey.slon.access.AccessKit.query
+import uk.matvey.slon.access.AccessKit.queryAll
 import uk.matvey.slon.access.AccessKit.update
 import uk.matvey.slon.query.InsertOneQueryBuilder.Companion.insertOneInto
 import uk.matvey.slon.query.UpdateQueryBuilder.Companion.update
@@ -44,7 +44,7 @@ class UpdateQueryTest : TestContainersSetup() {
 
         // then
         repo.access { a ->
-            a.query(
+            a.queryAll(
                 "select * from update_query_test where id = ?",
                 listOf(id.toPgUuid()),
             ) { r ->

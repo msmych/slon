@@ -6,7 +6,7 @@ class InsertQuery(
     private val table: String,
     private val columns: List<String>,
     private val values: List<List<PgValue>>,
-    private val onConflict: OnConflictClause? = null,
+    private val onConflict: OnConflict? = null,
 ) : Update {
 
     init {

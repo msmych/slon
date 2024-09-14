@@ -8,13 +8,13 @@ import org.junit.jupiter.api.Test
 import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
-import uk.matvey.slon.access.AccessKit.query
+import uk.matvey.slon.access.AccessKit.queryAll
 import uk.matvey.slon.access.AccessKit.queryOne
 import uk.matvey.slon.access.AccessKit.queryOneOrNull
 import uk.matvey.slon.access.AccessKit.update
 import uk.matvey.slon.query.InsertOneQueryBuilder.Companion.insertOneInto
 import uk.matvey.slon.query.InsertQueryBuilder.Companion.insertInto
-import uk.matvey.slon.query.OnConflictClause.Companion.doNothing
+import uk.matvey.slon.query.OnConflict.Companion.doNothing
 import uk.matvey.slon.repo.Repo
 import uk.matvey.slon.value.Pg
 import uk.matvey.slon.value.Pg.Companion.genRandomUuid
@@ -119,7 +119,7 @@ class InsertQueryTest : TestContainersSetup() {
 
         // then
         val result = repo.access { a ->
-            a.query(
+            a.queryAll(
                 "select * from insert_query_test where name = ?",
                 listOf(name.toPgText())
             ) { r ->
@@ -153,10 +153,8 @@ class InsertQueryTest : TestContainersSetup() {
                     set("name", name)
                     set("created_at", createdAt)
                     onConflict(
-                        OnConflictClause(
-                            listOf("created_at"),
-                            "update set created_at = excluded.created_at + interval '1 hours'"
-                        )
+                        listOf("created_at"),
+                        "update set created_at = excluded.created_at + interval '1 hours'"
                     )
                 }
             )

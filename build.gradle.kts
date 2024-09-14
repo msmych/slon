@@ -69,9 +69,9 @@ version = project.findProperty("releaseVersion") as? String ?: "0.1.0-SNAPSHOT"
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            groupId = project.group as String
+            groupId = project.group.toString()
             artifactId = "slon"
-            version = project.version as String
+            version = project.version.toString()
 
             from(components["java"])
 

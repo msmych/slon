@@ -1,6 +1,6 @@
 package uk.matvey.slon.query
 
-class ReturningClause(
+class Returning(
     private val columns: List<String>,
 ) {
 
@@ -13,6 +13,6 @@ class ReturningClause(
 
     companion object {
 
-        fun all() = ReturningClause(listOf())
+        fun all() = Returning(listOf())
     }
 }
