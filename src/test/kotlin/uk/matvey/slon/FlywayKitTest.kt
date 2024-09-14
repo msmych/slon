@@ -3,7 +3,7 @@ package uk.matvey.slon
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.matvey.slon.access.AccessKit.query
+import uk.matvey.slon.access.AccessKit.queryAll
 import uk.matvey.slon.flyway.FlywayKit.flywayMigrate
 import uk.matvey.slon.repo.Repo
 
@@ -19,7 +19,7 @@ class FlywayKitTest : TestContainersSetup() {
 
         // then
         repo.access { a ->
-            a.query("select count(*) from migration_test") {
+            a.queryAll("select count(*) from migration_test") {
                 assertThat(it.int(1)).isEqualTo(1)
             }
         }

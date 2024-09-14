@@ -15,7 +15,7 @@ import uk.matvey.kit.random.RandomKit.randomLong
 import uk.matvey.kit.string.StringKit.toUuid
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
-import uk.matvey.slon.access.AccessKit.query
+import uk.matvey.slon.access.AccessKit.queryAll
 import uk.matvey.slon.access.AccessKit.queryOne
 import uk.matvey.slon.access.AccessKit.update
 import uk.matvey.slon.exception.PgNotNullViolationException
@@ -118,7 +118,7 @@ class RepoTest : TestContainersSetup() {
                 "id = ?" to id.toPgUuid()
             }
             repo.access { a ->
-                a.query(
+                a.queryAll(
                     "select * from repo_test where $condition",
                     listOf(conditionParam)
                 ) { r ->
@@ -166,7 +166,7 @@ class RepoTest : TestContainersSetup() {
 
         // then
         val result = repo.access { a ->
-            a.query(
+            a.queryAll(
                 "select * from repo_test where id in (?, ?, ?) order by id",
                 listOf(id1, id2, id3).map { it.toPgUuid() },
                 RepoTestRecord::from
@@ -203,7 +203,7 @@ class RepoTest : TestContainersSetup() {
 
         // then
         repo.access { a ->
-            a.query(
+            a.queryAll(
                 "select * from repo_test where name = ?",
                 listOf(name.toPgText()),
             ) { r ->

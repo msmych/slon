@@ -1,7 +1,6 @@
 package uk.matvey.slon.query
 
 import kotlinx.serialization.json.JsonElement
-import uk.matvey.slon.RecordReader
 import uk.matvey.slon.value.PgArray.Companion.toPgArray
 import uk.matvey.slon.value.PgBool.Companion.toPgBool
 import uk.matvey.slon.value.PgDate.Companion.toPgDate
@@ -22,7 +21,7 @@ class InsertOneQueryBuilder(
 
     private val columns = mutableListOf<String>()
     private val values = mutableListOf<PgValue>()
-    private var onConflict: OnConflictClause? = null
+    private var onConflict: OnConflict? = null
 
     fun columns(columns: List<String>) = apply {
         this.columns.clear()
@@ -100,26 +99,15 @@ class InsertOneQueryBuilder(
         set(column, value.toPgArray())
     }
 
-    fun onConflict(onConflict: OnConflictClause) = apply {
+    fun onConflict(onConflict: OnConflict) = apply {
         this.onConflict = onConflict
     }
 
+    fun onConflict(columns: List<String>, action: String) = apply {
+        this.onConflict = OnConflict(columns, action)
+    }
+
     fun build() = InsertQuery(table, columns, listOf(values), onConflict)
-
-    fun <T> returning(
-        returning: ReturningClause = ReturningClause.all(),
-        read: (RecordReader) -> T
-    ): InsertReturningQuery<T> {
-        return object : InsertReturningQuery<T>(build(), returning) {
-            override fun read(reader: RecordReader): T {
-                return read(reader)
-            }
-        }
-    }
-
-    fun <T> returning(returning: List<String>, read: (RecordReader) -> T): InsertReturningQuery<T> {
-        return returning(ReturningClause(returning), read)
-    }
 
     companion object {
 

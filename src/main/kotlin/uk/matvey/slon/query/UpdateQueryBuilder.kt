@@ -1,7 +1,6 @@
 package uk.matvey.slon.query
 
 import kotlinx.serialization.json.JsonElement
-import uk.matvey.slon.RecordReader
 import uk.matvey.slon.value.PgArray.Companion.toPgArray
 import uk.matvey.slon.value.PgDate.Companion.toPgDate
 import uk.matvey.slon.value.PgInt.Companion.toPgInt
@@ -85,21 +84,6 @@ class UpdateQueryBuilder(
     }
 
     fun build() = UpdateQuery(table, values, condition, conditionParams)
-
-    fun <T> returning(
-        returning: ReturningClause = ReturningClause.all(),
-        read: (RecordReader) -> T
-    ): UpdateReturningQuery<T> {
-        return object : UpdateReturningQuery<T>(build(), returning) {
-            override fun read(reader: RecordReader): T {
-                return read(reader)
-            }
-        }
-    }
-
-    fun <T> returning(returning: List<String>, read: (RecordReader) -> T): UpdateReturningQuery<T> {
-        return returning(ReturningClause(returning), read)
-    }
 
     companion object {
 

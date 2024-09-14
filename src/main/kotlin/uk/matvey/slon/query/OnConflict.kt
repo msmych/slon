@@ -1,6 +1,6 @@
 package uk.matvey.slon.query
 
-class OnConflictClause(
+class OnConflict(
     private val columns: List<String>,
     private val action: String,
 ) {
@@ -17,8 +17,8 @@ class OnConflictClause(
 
     companion object {
 
-        fun doNothing(): OnConflictClause {
-            return OnConflictClause(listOf(), "nothing")
+        fun doNothing(): OnConflict {
+            return OnConflict(listOf(), "nothing")
         }
     }
 }
