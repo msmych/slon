@@ -2,9 +2,12 @@ package uk.matvey.slon.access
 
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.exception.UpdateCountMismatchException
+import uk.matvey.slon.query.DeleteQueryBuilder.Companion.deleteFrom
+import uk.matvey.slon.query.InsertOneQueryBuilder
+import uk.matvey.slon.query.InsertQueryBuilder
 import uk.matvey.slon.query.Query.Companion.plainQuery
 import uk.matvey.slon.query.Update
-import uk.matvey.slon.query.Update.Companion.plainUpdate
+import uk.matvey.slon.query.UpdateQueryBuilder
 import uk.matvey.slon.value.PgValue
 
 object AccessKit {
@@ -33,12 +36,36 @@ object AccessKit {
         return queryAll(query, read).single()
     }
 
-    fun Access.update(update: String, params: List<PgValue>): Int {
-        return execute(plainUpdate(update, params))
+    fun Access.plainUpdate(update: String, params: List<PgValue>): Int {
+        return execute(Update.plainUpdate(update, params))
     }
 
-    fun Access.update(update: String, vararg params: PgValue): Int {
-        return update(update, params.toList())
+    fun Access.plainUpdate(update: String, vararg params: PgValue): Int {
+        return plainUpdate(update, params.toList())
+    }
+
+    fun Access.insertInto(table: String, block: InsertQueryBuilder.() -> InsertQueryBuilder): Int {
+        return execute(InsertQueryBuilder.insertInto(table).block().build())
+    }
+
+    fun Access.insertOneInto(table: String): Int {
+        return execute(InsertOneQueryBuilder.insertOneInto(table).build())
+    }
+
+    fun Access.insertOneInto(table: String, block: InsertOneQueryBuilder.() -> InsertOneQueryBuilder): Int {
+        return execute(InsertOneQueryBuilder.insertOneInto(table).block().build())
+    }
+
+    fun Access.update(table: String, block: UpdateQueryBuilder.() -> UpdateQueryBuilder): Int {
+        return execute(UpdateQueryBuilder.update(table).block().build())
+    }
+
+    fun Access.delete(from: String, where: String, params: List<PgValue>): Int {
+        return execute(deleteFrom(from).where(where, params))
+    }
+
+    fun Access.delete(from: String, where: String, vararg params: PgValue): Int {
+        return delete(from, where, params.toList())
     }
 
     fun Access.updateSingle(update: Update) {

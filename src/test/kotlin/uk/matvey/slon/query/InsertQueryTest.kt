@@ -1,6 +1,5 @@
 package uk.matvey.slon.query
 
-import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeAll
@@ -8,14 +7,14 @@ import org.junit.jupiter.api.Test
 import uk.matvey.kit.random.RandomKit.randomAlphabetic
 import uk.matvey.slon.RecordReader
 import uk.matvey.slon.TestContainersSetup
-import uk.matvey.slon.access.AccessKit.queryAll
-import uk.matvey.slon.access.AccessKit.queryOne
-import uk.matvey.slon.access.AccessKit.queryOneOrNull
-import uk.matvey.slon.access.AccessKit.update
-import uk.matvey.slon.query.InsertOneQueryBuilder.Companion.insertOneInto
-import uk.matvey.slon.query.InsertQueryBuilder.Companion.insertInto
 import uk.matvey.slon.query.OnConflict.Companion.doNothing
 import uk.matvey.slon.repo.Repo
+import uk.matvey.slon.repo.RepoKit.insertInto
+import uk.matvey.slon.repo.RepoKit.insertOneInto
+import uk.matvey.slon.repo.RepoKit.plainUpdate
+import uk.matvey.slon.repo.RepoKit.queryAll
+import uk.matvey.slon.repo.RepoKit.queryOne
+import uk.matvey.slon.repo.RepoKit.queryOneOrNull
 import uk.matvey.slon.value.Pg
 import uk.matvey.slon.value.Pg.Companion.genRandomUuid
 import uk.matvey.slon.value.PgText.Companion.toPgText
@@ -70,30 +69,24 @@ class InsertQueryTest : TestContainersSetup() {
     }
 
     @Test
-    fun `should insert record`() = runTest {
+    fun `should insert record`() {
         // given
         val id = randomUUID()
         val name = randomAlphabetic()
         val createdAt = Instant.now().truncatedTo(MILLIS)
 
         // when / then
-        repo.access { a ->
-            a.execute(
-                insertOneInto("insert_query_test") {
-                    set("id", id)
-                    set("name", name)
-                    set("created_at", createdAt)
-                }
-            )
+        repo.insertOneInto("insert_query_test") {
+            set("id", id)
+            set("name", name)
+            set("created_at", createdAt)
         }
 
-        val result = repo.access { a ->
-            a.queryOne(
-                "select * from insert_query_test where id = ?",
-                listOf(id.toPgUuid()),
-                InsertQueryTestRecord::from
-            )
-        }
+        val result = repo.queryOne(
+            "select * from insert_query_test where id = ?",
+            listOf(id.toPgUuid()),
+            InsertQueryTestRecord::from
+        )
 
         assertThat(result.id).isEqualTo(id)
         assertThat(result.name).isEqualTo(name)
@@ -101,113 +94,87 @@ class InsertQueryTest : TestContainersSetup() {
     }
 
     @Test
-    fun `should insert multiple records`() = runTest {
+    fun `should insert multiple records`() {
         // given
         val name = randomAlphabetic()
 
         // when
-        repo.access { a ->
-            a.execute(
-                insertInto("insert_query_test")
-                    .columns("id", "name", "created_at")
-                    .values(randomUUID().toPgUuid(), name.toPgText(), Pg.now())
-                    .values(randomUUID().toPgUuid(), name.toPgText(), Pg.plain("now() + interval '1 hours'"))
-                    .values(randomUUID().toPgUuid(), name.toPgText(), Pg.plain("now() + interval '2 hours'"))
-                    .build()
-            )
+        repo.insertInto("insert_query_test") {
+            columns("id", "name", "created_at")
+            values(randomUUID().toPgUuid(), name.toPgText(), Pg.now())
+            values(randomUUID().toPgUuid(), name.toPgText(), Pg.plain("now() + interval '1 hours'"))
+            values(randomUUID().toPgUuid(), name.toPgText(), Pg.plain("now() + interval '2 hours'"))
         }
 
         // then
-        val result = repo.access { a ->
-            a.queryAll(
-                "select * from insert_query_test where name = ?",
-                listOf(name.toPgText())
-            ) { r ->
-                assertThat(r.string("name")).isEqualTo(name)
-            }
+        val result = repo.queryAll(
+            "select * from insert_query_test where name = ?",
+            listOf(name.toPgText())
+        ) { r ->
+            assertThat(r.string("name")).isEqualTo(name)
         }
         assertThat(result).hasSize(3)
     }
 
     @Test
-    fun `should support on conflict clause`() = runTest {
+    fun `should support on conflict clause`() {
         // given
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomAlphabetic()
 
-        repo.access { a ->
-            a.execute(
-                insertOneInto("insert_query_test") {
-                    set("id", genRandomUuid())
-                    set("name", name)
-                    set("created_at", createdAt)
-                }
-            )
+        repo.insertOneInto("insert_query_test") {
+            set("id", genRandomUuid())
+            set("name", name)
+            set("created_at", createdAt)
         }
 
         // when
-        repo.access { a ->
-            a.execute(
-                insertOneInto("insert_query_test") {
-                    set("id", genRandomUuid())
-                    set("name", name)
-                    set("created_at", createdAt)
-                    onConflict(
-                        listOf("created_at"),
-                        "update set created_at = excluded.created_at + interval '1 hours'"
-                    )
-                }
+        repo.insertOneInto("insert_query_test") {
+            set("id", genRandomUuid())
+            set("name", name)
+            set("created_at", createdAt)
+            onConflict(
+                listOf("created_at"),
+                "update set created_at = excluded.created_at + interval '1 hours'"
             )
         }
 
         // then
-        val result = repo.access { a ->
-            a.queryOneOrNull(
-                "select * from insert_query_test where name = ?",
-                listOf(name.toPgText())
-            ) { r ->
-                assertThat(r.instant("created_at")).isEqualTo(createdAt.plus(Duration.ofHours(1)))
-            }
+        val result = repo.queryOneOrNull(
+            "select * from insert_query_test where name = ?",
+            listOf(name.toPgText())
+        ) { r ->
+            assertThat(r.instant("created_at")).isEqualTo(createdAt.plus(Duration.ofHours(1)))
         }
         assertThat(result).isNotNull
     }
 
     @Test
-    fun `should support on conflict do nothing`() = runTest {
+    fun `should support on conflict do nothing`() {
         // given
         val createdAt = Instant.now().truncatedTo(MILLIS)
         val name = randomAlphabetic()
 
-        repo.access { a ->
-            a.execute(
-                insertOneInto("insert_query_test") {
-                    set("id", genRandomUuid())
-                    set("name", name)
-                    set("created_at", createdAt)
-                }
-            )
+        repo.insertOneInto("insert_query_test") {
+            set("id", genRandomUuid())
+            set("name", name)
+            set("created_at", createdAt)
         }
 
         // when
-        repo.access { a ->
-            a.execute(
-                insertOneInto("insert_query_test") {
-                    set("id", genRandomUuid())
-                    set("name", name)
-                    set("created_at", createdAt)
-                    onConflict(doNothing())
-                }
-            )
+        repo.insertOneInto("insert_query_test") {
+            set("id", genRandomUuid())
+            set("name", name)
+            set("created_at", createdAt)
+            onConflict(doNothing())
         }
 
         // then
-        val result = repo.access { a ->
-            a.queryOneOrNull(
-                "select * from insert_query_test where name = ?",
-                listOf(name.toPgText())
-            ) { r ->
-                assertThat(r.instant("created_at")).isEqualTo(createdAt)
-            }
+        val result = repo.queryOneOrNull(
+            "select * from insert_query_test where name = ?",
+            listOf(name.toPgText())
+        ) { r ->
+            assertThat(r.instant("created_at")).isEqualTo(createdAt)
         }
         assertThat(result).isNotNull
     }
@@ -218,23 +185,21 @@ class InsertQueryTest : TestContainersSetup() {
 
         @BeforeAll
         @JvmStatic
-        fun initSetup() = runTest {
+        fun initSetup() {
             repo = Repo(dataSource())
-            repo.access { a ->
-                a.update(
-                    """
+            repo.plainUpdate(
+                """
                 create table if not exists insert_query_test (
                     id uuid null,
                     name text null,
                     created_at timestamp not null
                 )
                 """.trimIndent()
-                )
-                a.update(
-                    """create unique index if not exists insert_query_test_created_at_idx
+            )
+            repo.plainUpdate(
+                """create unique index if not exists insert_query_test_created_at_idx
                     | on insert_query_test (created_at)""".trimMargin()
-                )
-            }
+            )
         }
     }
 }
