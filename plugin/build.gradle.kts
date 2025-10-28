@@ -3,6 +3,7 @@ plugins {
     `maven-publish`
     kotlin("jvm") version "2.2.20"
     id("com.gradle.plugin-publish") version "1.2.1"
+    signing
 }
 
 group = "uk.matvey"
@@ -28,12 +29,13 @@ dependencies {
 
 gradlePlugin {
     website = "https://matvey.uk/tech"
-    vcsUrl = "https://github.com/matvey/slon.git"
+    vcsUrl = "https://github.com/msmych/slon.git"
     plugins {
         create("slon") {
             id = "uk.matvey.slon"
             displayName = "Slon"
             description = "Generate jOOQ classes based on Flyway migrations"
+            tags = listOf("postgres", "flyway", "jooq", "testcontainers")
             implementationClass = "uk.matvey.slon.plugin.SlonPlugin"
         }
     }
@@ -54,4 +56,9 @@ publishing {
             url = layout.buildDirectory.dir("local-repo").get().asFile.toURI()
         }
     }
+}
+
+signing {
+    useGpgCmd()
+    sign(publishing.publications)
 }
